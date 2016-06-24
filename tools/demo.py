@@ -14,10 +14,10 @@ See README.md for installation instructions before running.
 """
 
 import _init_paths
-from fast_rcnn.config import cfg
-from fast_rcnn.test import im_detect
-from utils.cython_nms import nms
-from utils.timer import Timer
+from lib.fast_rcnn.config import cfg
+from lib.fast_rcnn.test import im_detect
+from lib.utils.nms import nms
+from lib.utils.timer import Timer
 import matplotlib.pyplot as plt
 import numpy as np
 import scipy.io as sio
@@ -139,8 +139,9 @@ if __name__ == '__main__':
     if args.cpu_mode:
         caffe.set_mode_cpu()
     else:
-        caffe.set_mode_gpu()
-        caffe.set_device(args.gpu_id)
+        pass
+        # caffe.set_mode_gpu()
+        # caffe.set_device(args.gpu_id)
     net = caffe.Net(prototxt, caffemodel, caffe.TEST)
 
     print '\n\nLoaded network {:s}'.format(caffemodel)

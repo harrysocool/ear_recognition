@@ -5,7 +5,7 @@ Created on 16/6/25 21:48 2016
 @author: harry sun
 """
 if __name__ == '__main__':
-    from selective_search_ijcv_with_python import get_windows
+    from OP_methods.selective_search_ijcv_with_python import get_windows
     import numpy as np
     from PIL import Image, ImageDraw
 

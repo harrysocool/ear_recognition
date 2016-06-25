@@ -3,6 +3,10 @@
 	url = https://github.com/rbgirshick/caffe-fast-rcnn.git
 	branch = fast-rcnn
 [submodule "selective_search_ijcv_with_python"]
-	path = selective_search_ijcv_with_python
+	path = OP_methods/selective_search_ijcv_with_python
 	url = https://github.com/sergeyk/selective_search_ijcv_with_python.git
+	branch = master
+[submodule "edges"]
+	path = OP_methods/edges
+	url = https://github.com/pdollar/edges.git
 	branch = master

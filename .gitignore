@@ -1,3 +1,4 @@
+*.mat
 *.pyc
 .ipynb_checkpoints
 utils/*.c

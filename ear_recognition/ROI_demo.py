@@ -94,10 +94,10 @@ if __name__ == '__main__':
     method = OP_method()
     image_path_list = ['../3.jpg']
 
-    save_mat_boxes(image_path_list, method.ss_boxes_outpath, cmd=method.selective_search)
+    # save_mat_boxes(image_path_list, method.ss_boxes_outpath, cmd=method.selective_search)
     all_boxes_list = read_ss_mat_boxes(method.ss_boxes_outpath)
-    draw_boxes(image_path_list[0], all_boxes_list[0][0:2])
-
-    save_mat_boxes(image_path_list, method.ed_boxes_outpath, cmd=method.edge_detector)
+    draw_boxes(image_path_list[0], all_boxes_list[0])
+    #
+    # save_mat_boxes(image_path_list, method.ed_boxes_outpath, cmd=method.edge_detector)
     all_boxes_list = read_ed_mat_boxes(method.ed_boxes_outpath)
-    draw_boxes(image_path_list[0], all_boxes_list[0][0:2])
+    draw_boxes(image_path_list[0], all_boxes_list[0])

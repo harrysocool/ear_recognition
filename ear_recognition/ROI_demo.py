@@ -19,7 +19,7 @@ class OP_method(object):
         self.edge_detector = 'edge_detector'
         #
         self.ss_boxes_outpath = os.path.abspath('./data_file/ss_all_boxes.mat')
-        self.ed_boxes_outpath = os.path.abspath('./data_file/ed_all_boxes.mat')
+        self.ed_boxes_outpath = os.path.abspath('./data_file/ed1_all_boxes.mat')
 
 
 def save_mat_boxes(image_fnames, output_filename, cmd):
@@ -85,8 +85,12 @@ def draw_boxes(image_path, boxes_list):
 
     img = Image.open(image_path)
     dr = ImageDraw.Draw(img)
-    for box in boxes_list:
-        box = tuple(box)
+    if isinstance(boxes_list, list):
+        for box in boxes_list:
+            box = map(int, tuple(box))
+            dr.rectangle(box, outline="red")
+    else:
+        box = map(int, tuple(boxes_list))
         dr.rectangle(box, outline="red")
     img.show()
 
@@ -99,8 +103,14 @@ def listdir_no_hidden(path):
     return list1
 
 
-def save_gt_roidb_txt(data_path, csv_path, out_path):
-    box_list = pd.read_csv(csv_path,header=0).get_values()
+def write_list_to_csv(list1, path_out, header=False):
+    temp = pd.DataFrame(list1)
+    temp.to_csv(path_out, index=False, header=header)
+
+
+def save_gt_roidb_csv(data_path, csv_path, out_path):
+    box_list = pd.read_csv(csv_path, header=0).get_values()
+
     image_path_list = listdir_no_hidden(data_path)
     assert len(box_list) == len(image_path_list), 'the length of box list must equal to image list'
     new_list = []
@@ -108,7 +118,7 @@ def save_gt_roidb_txt(data_path, csv_path, out_path):
         s1 = str(entry)
         s2 = str(box_list[idx]).strip('[]')
         new_list.append(s1 + ' 1 ' + s2)
-    return new_list
+    write_list_to_csv(new_list, out_path)
 
 
 if __name__ == '__main__':
@@ -116,18 +126,22 @@ if __name__ == '__main__':
     datasets_path = '../DatabaseEars/'
 
     image_path_list = listdir_no_hidden(datasets_path)
-    # image_path_list = ['../3.jpg']
+    image_path_list = ['../2.jpg']
 
     # save_mat_boxes(image_path_list, method.ss_boxes_outpath, cmd=method.selective_search)
     # all_boxes_list = read_ss_mat_boxes(method.ss_boxes_outpath)
     # draw_boxes(image_path_list[0], all_boxes_list[0])
     #
     # save_mat_boxes(image_path_list, method.ed_boxes_outpath, cmd=method.edge_detector)
-    # all_boxes_list = read_ed_mat_boxes(method.ed_boxes_outpath)
-    # draw_boxes(image_path_list[0], all_boxes_list[0])
+    all_boxes_list = read_ed_mat_boxes(method.ed_boxes_outpath)
+    # draw_boxes(image_path_list[0], all_boxes_list[0][0])
 
     csv_path = os.path.join(datasets_path, 'boundaries.csv')
     image_path = os.path.join(datasets_path, 'DatabaseEars')
-    output_path = os.path.join('../data_file/gt_roidb.csv')
-    save_gt_roidb_txt(image_path, csv_path, output_path)
+    output_path = os.path.join('./data_file/gt_roidb.csv')
+    # save_gt_roidb_csv(image_path, csv_path, output_path)
+
+    list1 = pd.read_csv(output_path, header=None).values.flatten().tolist()
+    l = list1[1].split(' ')
+    draw_boxes(l[0], (l[-2], l[-4], l[-1], l[-3]))
     pass

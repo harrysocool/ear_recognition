@@ -99,7 +99,8 @@ def listdir_no_hidden(path):
     list1 = []
     for f in os.listdir(path):
         if not f.startswith('.'):
-            list1.append(os.path.join(path, f))
+            p = os.path.abspath(path)
+            list1.append(os.path.join(p, f))
     return list1
 
 
@@ -114,11 +115,14 @@ def save_gt_roidb_csv(data_path, csv_path, out_path):
     image_path_list = listdir_no_hidden(data_path)
     assert len(box_list) == len(image_path_list), 'the length of box list must equal to image list'
     new_list = []
+    new_list1 = []
     for idx, entry in enumerate(image_path_list):
         s1 = str(entry)
         s2 = str(box_list[idx]).strip('[]')
         new_list.append(s1 + ' 1 ' + s2)
+        new_list1.append(s1)
     write_list_to_csv(new_list, out_path)
+    write_list_to_csv(new_list1, './data_file/image_index_list_.csv')
 
 
 if __name__ == '__main__':
@@ -134,14 +138,14 @@ if __name__ == '__main__':
     #
     # save_mat_boxes(image_path_list, method.ed_boxes_outpath, cmd=method.edge_detector)
     all_boxes_list = read_ed_mat_boxes(method.ed_boxes_outpath)
-    # draw_boxes(image_path_list[0], all_boxes_list[0][0])
+    draw_boxes(image_path_list[0], all_boxes_list[0][0])
 
     csv_path = os.path.join(datasets_path, 'boundaries.csv')
     image_path = os.path.join(datasets_path, 'DatabaseEars')
     output_path = os.path.join('./data_file/gt_roidb.csv')
-    # save_gt_roidb_csv(image_path, csv_path, output_path)
+    save_gt_roidb_csv(image_path, csv_path, output_path)
 
     list1 = pd.read_csv(output_path, header=None).values.flatten().tolist()
     l = list1[1].split(' ')
-    draw_boxes(l[0], (l[-2], l[-4], l[-1], l[-3]))
+    draw_boxes(l[0], (l[-1], l[-4], l[-2], l[-3]))
     pass

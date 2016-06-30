@@ -6,7 +6,8 @@
 # Written by Ross Girshick
 # --------------------------------------------------------
 
-import lib.datasets as datasets
+import lib.datasets
+from lib.datasets.imdb import imdb
 import os
 import numpy as np
 import scipy.sparse
@@ -14,11 +15,12 @@ import scipy.io as sio
 import lib.utils.cython_bbox
 import cPickle
 import subprocess
+import pandas as pd
 
 
-class soton_ear(datasets.imdb):
+class soton_ear(imdb):
     def __init__(self, image_set, devkit_path=None):
-        datasets.imdb.__init__(self, image_set)  # imageset 为train val trainval test
+        imdb.__init__(self, image_set)  # imageset 为train val trainval test
         self._image_set = image_set
         self._devkit_path = devkit_path
         self._data_path = os.path.join(self._devkit_path)
@@ -26,7 +28,7 @@ class soton_ear(datasets.imdb):
         self._class_to_ind = dict(zip(self.classes, xrange(self.num_classes)))  # 构成字典{'__background__':'0','car':'1'}
         # self._image_index = self._load_image_set_index('ImageList_Version_S.txt')#添加文件列表
         # self._image_index = self._load_image_set_index('ImageList_Version_S_window_List.txt')#添加文件列表
-        self._image_index = self._load_image_set_index('ImageList_Version_S_AddData.txt')  #
+        self._image_index = self._load_image_set_index('image_index_list.csv')  #
         # Default to roidb handler
         self._roidb_handler = self.selective_search_roidb
         # PASCAL specific config options
@@ -64,10 +66,10 @@ class soton_ear(datasets.imdb):
         # self._devkit_path + /VOCdevkit2007/VOC2007/ImageSets/Main/val.txt
         # /home/chenjie/KakouTrainForFRCNN_1/DataSet/KakouTrainFRCNN_ImageList.txt
         image_set_file = os.path.join(self._data_path, imagelist)  # load ImageList that only contain ImageFileName
+        f = os.path.exists(image_set_file)
         assert os.path.exists(image_set_file), \
             'Path does not exist: {}'.format(image_set_file)
-        with open(image_set_file) as f:
-            image_index = [x.strip() for x in f.readlines()]
+        image_index = pd.read_csv(image_set_file, header=None).values.flatten().tolist()
         return image_index
 
 
@@ -106,10 +108,10 @@ class soton_ear(datasets.imdb):
                 roidb = cPickle.load(fid)
             print '{} ss roidb loaded from {}'.format(self.name, cache_file)
             return roidb
-        if self._image_set != 'KakouTest':
+        if self._image_set != 'soton_ear':
             gt_roidb = self.gt_roidb()
             ss_roidb = self._load_selective_search_roidb(gt_roidb)
-            roidb = datasets.imdb.merge_roidbs(gt_roidb, ss_roidb)
+            roidb = imdb.merge_roidbs(gt_roidb, ss_roidb)
         else:
             roidb = self._load_selective_search_roidb(None)
         with open(cache_file, 'wb') as fid:
@@ -121,15 +123,19 @@ class soton_ear(datasets.imdb):
 
     def _load_selective_search_roidb(self, gt_roidb):  # 已经修改
         # filename = os.path.abspath(os.path.join(self.cache_path, '..','selective_search_data',self.name + '.mat'))
-        filename = os.path.join(self._data_path, 'EdgeBox_Version_S_AddData.mat')  # 这里输入相对应的预选框文件路径
+        filename = os.path.join(self._data_path, 'ed_all_boxes.mat')  # 这里输入相对应的预选框文件路径
         assert os.path.exists(filename), \
             'Selective search data not found at: {}'.format(filename)
-        raw_data = sio.loadmat(filename)['boxes'].ravel()
+        raw_data = sio.loadmat(filename)['all_boxes'].ravel()
 
         box_list = []
         for i in xrange(raw_data.shape[0]):
         # box_list.append(raw_data[i][:,(1, 0, 3, 2)] - 1)#原来的Psacalvoc调换了列，我这里box的顺序是x1 ,y1,x2,y2 由EdgeBox格式为x1,y1,w,h经过修改
-            box_list.append(raw_data[i][:, :] - 1)
+            boxes = raw_data[i]
+            correct_boxes = np.zeros((len(boxes), 4))
+            correct_boxes[:, (0, 1)] = boxes[:, (0, 1)] - 1
+            correct_boxes[:, (2, 3)] = boxes[:, (0, 1)] + boxes[:, (2, 3)]
+            box_list.append(correct_boxes)
 
         return self.create_roidb_from_box_list(box_list, gt_roidb)
 
@@ -190,9 +196,9 @@ class soton_ear(datasets.imdb):
         # annotation file = os.path.join(self._data_path, 'ImageList_Version_S_window.txt')
 
 
-        annotationfile = os.path.join(self._data_path, 'ImageList_Version_S_GT_AddData.txt')
+        annotationfile = os.path.join(self._data_path, 'gt_roidb.csv')
         f = open(annotationfile)
-        split_line = f.readline().strip().split()
+        split_line = f.readline().strip().split(' ')
         while (split_line):
             num_objs = int(split_line[1])
             boxes = np.zeros((num_objs, 4), dtype=np.uint16)
@@ -250,7 +256,7 @@ class soton_ear(datasets.imdb):
         path = os.path.join(os.path.dirname(__file__),
                             'VOCdevkit-matlab-wrapper')
         cmd = 'cd {} && '.format(path)
-        cmd += '{:s} -nodisplay -nodesktop '.format(datasets.MATLAB)
+        cmd += '{:s} -nodisplay -nodesktop '.format(lib.datasets.MATLAB)
         cmd += '-r "dbstop if error; '
         cmd += 'voc_eval(\'{:s}\',\'{:s}\',\'{:s}\',\'{:s}\',{:d}); quit;"' \
             .format(self._devkit_path, comp_id,
@@ -274,8 +280,7 @@ class soton_ear(datasets.imdb):
 
 
 if __name__ == '__main__':
-    d = datasets.soton_ear('soton_ear', '/Users/harrysocool/Github/fast-rcnn/ear_recognition/data_file')
+    d = soton_ear('soton_ear', '/Users/harrysocool/Github/fast-rcnn/ear_recognition/data_file')
     res = d.roidb
-    from IPython import embed;
 
     embed()

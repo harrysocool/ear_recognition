@@ -24,13 +24,14 @@ class soton_ear(imdb):
         self._image_set = image_set
         self._devkit_path = devkit_path
         self._data_path = os.path.join(self._devkit_path)
-        self._classes = ('__background__', 'car')  # 包含的类
+        self._classes = ('__background__', 'ear')  # 包含的类
         self._class_to_ind = dict(zip(self.classes, xrange(self.num_classes)))  # 构成字典{'__background__':'0','car':'1'}
         # self._image_index = self._load_image_set_index('ImageList_Version_S.txt')#添加文件列表
         # self._image_index = self._load_image_set_index('ImageList_Version_S_window_List.txt')#添加文件列表
         self._image_index = self._load_image_set_index('image_index_list.csv')  #
         # Default to roidb handler
         self._roidb_handler = self.selective_search_roidb
+        self._gt_roi_handler = self.gt_roidb()
         # PASCAL specific config options
         self.config = {'cleanup': True,
                        'use_salt': True,
@@ -66,7 +67,6 @@ class soton_ear(imdb):
         # self._devkit_path + /VOCdevkit2007/VOC2007/ImageSets/Main/val.txt
         # /home/chenjie/KakouTrainForFRCNN_1/DataSet/KakouTrainFRCNN_ImageList.txt
         image_set_file = os.path.join(self._data_path, imagelist)  # load ImageList that only contain ImageFileName
-        f = os.path.exists(image_set_file)
         assert os.path.exists(image_set_file), \
             'Path does not exist: {}'.format(image_set_file)
         image_index = pd.read_csv(image_set_file, header=None).values.flatten().tolist()
@@ -198,7 +198,7 @@ class soton_ear(imdb):
 
         annotationfile = os.path.join(self._data_path, 'gt_roidb.csv')
         f = open(annotationfile)
-        split_line = f.readline().strip().split(' ')
+        split_line = f.readline().strip().split()
         while (split_line):
             num_objs = int(split_line[1])
             boxes = np.zeros((num_objs, 4), dtype=np.uint16)
@@ -209,8 +209,8 @@ class soton_ear(imdb):
                 y1 = float(split_line[3 + i * 4])
                 x2 = float(split_line[4 + i * 4])
                 y2 = float(split_line[5 + i * 4])
-                cls = self._class_to_ind['car']
-                boxes[i, :] = [x1, y1, x2, y2]
+                cls = self._class_to_ind['ear']
+                boxes[i, :] = [y2, x1, x2, y1]
                 gt_classes[i] = cls
                 overlaps[i, cls] = 1.0
 
@@ -282,5 +282,3 @@ class soton_ear(imdb):
 if __name__ == '__main__':
     d = soton_ear('soton_ear', '/Users/harrysocool/Github/fast-rcnn/ear_recognition/data_file')
     res = d.roidb
-
-    embed()

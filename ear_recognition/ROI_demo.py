@@ -122,7 +122,7 @@ def save_gt_roidb_csv(data_path, csv_path, out_path):
         new_list.append(s1 + ' 1 ' + s2)
         new_list1.append(s1)
     write_list_to_csv(new_list, out_path)
-    write_list_to_csv(new_list1, './data_file/image_index_list_.csv')
+    write_list_to_csv(new_list1, './data_file/image_index_list.csv')
 
 
 if __name__ == '__main__':

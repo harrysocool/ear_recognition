@@ -15,11 +15,12 @@ def add_path(path):
         sys.path.insert(0, path)
 
 this_dir = osp.dirname(__file__)
+parent_dir = osp.split(this_dir)[0]
 
 # Add caffe to PYTHONPATH
-caffe_path = osp.join(this_dir, '..', 'caffe-fast-rcnn', 'python')
+caffe_path = osp.join(parent_dir, 'caffe-fast-rcnn', 'python')
 add_path(caffe_path)
 
 # Add lib to PYTHONPATH
-lib_path = osp.join(this_dir, '..', 'lib')
+lib_path = osp.join(parent_dir, 'lib')
 add_path(lib_path)

@@ -6,13 +6,13 @@
 # Written by Ross Girshick
 # --------------------------------------------------------
 
-import lib.datasets
-from lib.datasets.imdb import imdb
+import datasets
+from datasets.imdb import imdb
 import os
 import numpy as np
 import scipy.sparse
 import scipy.io as sio
-import lib.utils.cython_bbox
+import utils.cython_bbox
 import cPickle
 import subprocess
 import pandas as pd

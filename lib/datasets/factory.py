@@ -9,7 +9,7 @@
 
 
 #import datasets.pascal_voc
-from lib.datasets.soton_ear import soton_ear
+from datasets.soton_ear import soton_ear
 import numpy as np
 
 __sets = {}

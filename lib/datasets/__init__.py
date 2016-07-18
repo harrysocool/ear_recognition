@@ -11,7 +11,7 @@ from .soton_ear import soton_ear
 from . import factory
 
 import os.path as osp
-ROOT_DIR = osp.join(osp.dirname(__file__), '..', '..')
+ROOT_DIR = osp.join("/home/harrysocool/Github/fast-rcnn")
 
 # We assume your matlab binary is in your path and called `matlab'.
 # If either is not true, just add it to your path and alias it as matlab, or

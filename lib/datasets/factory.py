@@ -14,7 +14,7 @@ import numpy as np
 
 __sets = {}
 imageset = 'soton_ear'
-devkit = '/home/harrysocool/Github/fast-rcnn/ear_recognition/data_file'
+devkit = '/Users/harrysocool/Github/fast-rcnn/ear_recognition/data_file'
 #def _selective_search_IJCV_top_k(split, year, top_k):
 #    """Return an imdb that uses the top k proposals from the selective search
 #    IJCV code.

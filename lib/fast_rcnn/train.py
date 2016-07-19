@@ -7,6 +7,9 @@
 
 """Train a Fast R-CNN network."""
 
+import sys
+sys.path.insert(0, "/Users/harrysocool/Github/caffe/python")
+sys.path.insert(0, "/Users/harrysocool/Github/fast-rcnn/lib")
 import caffe
 from fast_rcnn.config import cfg
 import roi_data_layer.roidb as rdl_roidb
@@ -122,3 +125,8 @@ def train_net(solver_prototxt, roidb, output_dir,
     print 'Solving...'
     sw.train_model(max_iters)
     print 'done solving'
+
+if __name__ == '__main__':
+    from lib.datasets.factory import get_imdb
+    a = train_net('models/VGG_CNN_M_1024/solver.prototxt', get_training_roidb(get_imdb('soton_ear')), output_dir=None)
+    pass

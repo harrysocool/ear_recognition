@@ -6,8 +6,8 @@
 # Written by Ross Girshick
 # --------------------------------------------------------
 import sys
-sys.path.insert(0, "/Users/harrysocool/Github/caffe/python")
-sys.path.insert(0, "/Users/harrysocool/Github/fast-rcnn/lib")
+sys.path.insert(0, "/home/harrysocool/Github/caffe/python")
+sys.path.insert(0, "/home/harrysocool/Github/fast-rcnn/lib")
 import datasets
 from datasets.imdb import imdb
 import os
@@ -290,5 +290,5 @@ class soton_ear(imdb):
 
 
 if __name__ == '__main__':
-    d = soton_ear('soton_ear', '/Users/harrysocool/Github/fast-rcnn/ear_recognition/data_file')
+    d = soton_ear('soton_ear', '/home/harrysocool/Github/fast-rcnn/ear_recognition/data_file')
     res = d.roidb

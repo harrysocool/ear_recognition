@@ -19,7 +19,7 @@ class OP_method(object):
         self.edge_detector = 'edge_detector'
         #
         self.ss_boxes_outpath = os.path.abspath('./data_file/ss_all_boxes.mat')
-        self.ed_boxes_outpath = os.path.abspath('./data_file/ed1_all_boxes.mat')
+        self.ed_boxes_outpath = os.path.abspath('./data_file/ed_all_boxes.mat')
 
 
 def save_mat_boxes(image_fnames, output_filename, cmd):
@@ -94,7 +94,6 @@ def draw_boxes(image_path, boxes_list):
         dr.rectangle(box, outline="red")
     img.show()
 
-
 def listdir_no_hidden(path):
     list1 = []
     for f in os.listdir(path):
@@ -128,9 +127,12 @@ def save_gt_roidb_csv(data_path, csv_path, out_path):
 if __name__ == '__main__':
     method = OP_method()
     datasets_path = '../DatabaseEars/'
+    csv_path = os.path.join(datasets_path, 'boundaries.csv')
+    image_path = os.path.join(datasets_path, 'DatabaseEars/')
+    output_path = os.path.join('./data_file/gt_roidb.csv')
 
-    image_path_list = listdir_no_hidden(datasets_path)
-    image_path_list = ['../2.jpg']
+    image_path_list = listdir_no_hidden(image_path)
+    # image_path_list = ['../2.jpg']
 
     # save_mat_boxes(image_path_list, method.ss_boxes_outpath, cmd=method.selective_search)
     # all_boxes_list = read_ss_mat_boxes(method.ss_boxes_outpath)
@@ -138,11 +140,9 @@ if __name__ == '__main__':
     #
     # save_mat_boxes(image_path_list, method.ed_boxes_outpath, cmd=method.edge_detector)
     all_boxes_list = read_ed_mat_boxes(method.ed_boxes_outpath)
+    # print("success loaded")
     draw_boxes(image_path_list[0], all_boxes_list[0][0])
 
-    csv_path = os.path.join(datasets_path, 'boundaries.csv')
-    image_path = os.path.join(datasets_path, 'DatabaseEars')
-    output_path = os.path.join('./data_file/gt_roidb.csv')
     save_gt_roidb_csv(image_path, csv_path, output_path)
 
     list1 = pd.read_csv(output_path, header=None).values.flatten().tolist()

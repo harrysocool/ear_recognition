@@ -5,14 +5,16 @@
 # Licensed under The MIT License [see LICENSE for details]
 # Written by Ross Girshick
 # --------------------------------------------------------
-
-import lib.datasets
-from lib.datasets.imdb import imdb
+import sys
+sys.path.insert(0, "/Users/harrysocool/Github/caffe/python")
+sys.path.insert(0, "/Users/harrysocool/Github/fast-rcnn/lib")
+import datasets
+from datasets.imdb import imdb
 import os
 import numpy as np
 import scipy.sparse
 import scipy.io as sio
-import lib.utils.cython_bbox
+import utils.cython_bbox
 import cPickle
 import subprocess
 import pandas as pd
@@ -113,7 +115,9 @@ class soton_ear(imdb):
             ss_roidb = self._load_selective_search_roidb(gt_roidb)
             roidb = imdb.merge_roidbs(gt_roidb, ss_roidb)
         else:
-            roidb = self._load_selective_search_roidb(None)
+            gt_roidb = self.gt_roidb()
+            roidb = self._load_selective_search_roidb(gt_roidb)
+            roidb = imdb.merge_roidbs(gt_roidb, roidb)
         with open(cache_file, 'wb') as fid:
             cPickle.dump(roidb, fid, cPickle.HIGHEST_PROTOCOL)
         print 'wrote ss roidb to {}'.format(cache_file)
@@ -135,9 +139,12 @@ class soton_ear(imdb):
             correct_boxes = np.zeros((len(boxes), 4))
             correct_boxes[:, (0, 1)] = boxes[:, (0, 1)] - 1
             correct_boxes[:, (2, 3)] = boxes[:, (0, 1)] + boxes[:, (2, 3)]
+            assert (correct_boxes[:, 2] >= correct_boxes[:, 0]).all(), 'The x2 should >= x1, No.%d does not apply' %i
             box_list.append(correct_boxes)
 
-        return self.create_roidb_from_box_list(box_list, gt_roidb)
+        roidb = self.create_roidb_from_box_list(box_list, gt_roidb)
+
+        return roidb
 
 
     # def selective_search_IJCV_roidb(self):
@@ -210,7 +217,7 @@ class soton_ear(imdb):
                 x2 = float(split_line[4 + i * 4])
                 y2 = float(split_line[5 + i * 4])
                 cls = self._class_to_ind['ear']
-                boxes[i, :] = [y2, x1, x2, y1]
+                boxes[i, :] = [x1, y1, x2, y2]
                 gt_classes[i] = cls
                 overlaps[i, cls] = 1.0
 
@@ -256,7 +263,7 @@ class soton_ear(imdb):
         path = os.path.join(os.path.dirname(__file__),
                             'VOCdevkit-matlab-wrapper')
         cmd = 'cd {} && '.format(path)
-        cmd += '{:s} -nodisplay -nodesktop '.format(lib.datasets.MATLAB)
+        cmd += '{:s} -nodisplay -nodesktop '.format(datasets.MATLAB)
         cmd += '-r "dbstop if error; '
         cmd += 'voc_eval(\'{:s}\',\'{:s}\',\'{:s}\',\'{:s}\',{:d}); quit;"' \
             .format(self._devkit_path, comp_id,

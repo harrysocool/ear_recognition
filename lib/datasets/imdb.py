@@ -8,10 +8,10 @@
 import os
 import os.path as osp
 import PIL.Image
-# from lib.utils.cython_bbox import bbox_overlaps
+from utils.cython_bbox import bbox_overlaps
 import numpy as np
 import scipy.sparse
-import lib
+import datasets
 
 class imdb(object):
     """Image database."""
@@ -65,7 +65,7 @@ class imdb(object):
 
     @property
     def cache_path(self):
-        cache_path = osp.abspath(osp.join(lib.datasets.ROOT_DIR, 'data', 'cache'))
+        cache_path = osp.abspath(osp.join(datasets.ROOT_DIR, 'data', 'cache'))
         if not os.path.exists(cache_path):
             os.makedirs(cache_path)
         return cache_path
@@ -101,7 +101,7 @@ class imdb(object):
             oldx2 = boxes[:, 2].copy()
             boxes[:, 0] = widths[i] - oldx2 - 1
             boxes[:, 2] = widths[i] - oldx1 - 1
-            assert (boxes[:, 2] >= boxes[:, 0]).all()
+            assert (boxes[:, 2] >= boxes[:, 0]).all(), 'The x2 should >= x1, No.%d does not apply' %i
             entry = {'boxes' : boxes,
                      'gt_overlaps' : self.roidb[i]['gt_overlaps'],
                      'gt_classes' : self.roidb[i]['gt_classes'],
@@ -120,23 +120,23 @@ class imdb(object):
             boxes = candidate_boxes[i]
             if boxes.shape[0] == 0:
                 continue
-            # overlaps = bbox_overlaps(boxes.astype(np.float),
-            #                          gt_boxes.astype(np.float))
+            overlaps = bbox_overlaps(boxes.astype(np.float),
+                                     gt_boxes.astype(np.float))
 
             # gt_overlaps = np.hstack((gt_overlaps, overlaps.max(axis=0)))
             _gt_overlaps = np.zeros((gt_boxes.shape[0]))
-            # for j in xrange(gt_boxes.shape[0]):
-            #     argmax_overlaps = overlaps.argmax(axis=0)
-            #     max_overlaps = overlaps.max(axis=0)
-            #     gt_ind = max_overlaps.argmax()
-            #     gt_ovr = max_overlaps.max()
-            #     assert(gt_ovr >= 0)
-            #     box_ind = argmax_overlaps[gt_ind]
-            #     _gt_overlaps[j] = overlaps[box_ind, gt_ind]
-            #     assert(_gt_overlaps[j] == gt_ovr)
-            #     overlaps[box_ind, :] = -1
-            #     overlaps[:, gt_ind] = -1
-            #
+            for j in xrange(gt_boxes.shape[0]):
+                argmax_overlaps = overlaps.argmax(axis=0)
+                max_overlaps = overlaps.max(axis=0)
+                gt_ind = max_overlaps.argmax()
+                gt_ovr = max_overlaps.max()
+                assert(gt_ovr >= 0)
+                box_ind = argmax_overlaps[gt_ind]
+                _gt_overlaps[j] = overlaps[box_ind, gt_ind]
+                assert(_gt_overlaps[j] == gt_ovr)
+                overlaps[box_ind, :] = -1
+                overlaps[:, gt_ind] = -1
+            
             gt_overlaps = np.hstack((gt_overlaps, _gt_overlaps))
 
         num_pos = gt_overlaps.size
@@ -162,14 +162,14 @@ class imdb(object):
             if gt_roidb is not None:
                 gt_boxes = gt_roidb[i]['boxes']
                 gt_classes = gt_roidb[i]['gt_classes']
-                # gt_overlaps = bbox_overlaps(boxes.astype(np.float),
-                #                             gt_boxes.astype(np.float))
-                # argmaxes = gt_overlaps.argmax(axis=1)
-                # maxes = gt_overlaps.max(axis=1)
-                # I = np.where(maxes > 0)[0]
-                # overlaps[I, gt_classes[argmaxes[I]]] = maxes[I]
+                gt_overlaps = bbox_overlaps(boxes.astype(np.float),
+                                            gt_boxes.astype(np.float))
+                argmaxes = gt_overlaps.argmax(axis=1)
+                maxes = gt_overlaps.max(axis=1)
+                I = np.where(maxes > 0)[0]
+                overlaps[I, gt_classes[argmaxes[I]]] = maxes[I]
 
-            # overlaps = scipy.sparse.csr_matrix(overlaps)
+            overlaps = scipy.sparse.csr_matrix(overlaps)
             roidb.append({'boxes' : boxes,
                           'gt_classes' : np.zeros((num_boxes,),
                                                   dtype=np.int32),

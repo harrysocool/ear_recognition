@@ -10,9 +10,9 @@
 """Train a Fast R-CNN network on a region of interest database."""
 
 import _init_paths
-from lib.fast_rcnn.train import get_training_roidb, train_net
-from lib.fast_rcnn.config import cfg, cfg_from_file, cfg_from_list, get_output_dir
-from lib.datasets.factory import get_imdb
+from fast_rcnn.train import get_training_roidb, train_net
+from fast_rcnn.config import cfg, cfg_from_file, cfg_from_list, get_output_dir
+from datasets.factory import get_imdb
 import caffe
 import argparse
 import pprint
@@ -76,9 +76,9 @@ if __name__ == '__main__':
         caffe.set_random_seed(cfg.RNG_SEED)
 
     # set up caffe
-    caffe.set_mode_gpu()
-    if args.gpu_id is not None:
-        caffe.set_device(args.gpu_id)
+    # caffe.set_mode_gpu()
+    # if args.gpu_id is not None:
+    #     caffe.set_device(args.gpu_id)
 
     imdb = get_imdb(args.imdb_name)
     print 'Loaded dataset `{:s}` for training'.format(imdb.name)

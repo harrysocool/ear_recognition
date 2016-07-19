@@ -20,7 +20,7 @@ parent_dir = osp.split(this_dir)[0]
 
 # Add caffe to PYTHONPATH
 caffe_path = osp.join(parent_dir, 'caffe-fast-rcnn', 'python')
-add_path(caffe_path)
+add_path('/Users/harrysocool/Github/caffe/python')
 
 # Add lib to PYTHONPATH
 lib_path = osp.join(parent_dir, 'lib')

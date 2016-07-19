@@ -280,5 +280,5 @@ class soton_ear(imdb):
 
 
 if __name__ == '__main__':
-    d = soton_ear('soton_ear', '/Users/harrysocool/Github/fast-rcnn/ear_recognition/data_file')
+    d = soton_ear('soton_ear', '/home/harrysocool/Github/fast-rcnn/ear_recognition/data_file')
     res = d.roidb

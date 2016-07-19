@@ -206,17 +206,19 @@ class soton_ear(imdb):
         annotationfile = os.path.join(self._data_path, 'gt_roidb.csv')
         f = open(annotationfile)
         split_line = f.readline().strip().split()
+        count = 0
         while (split_line):
             num_objs = int(split_line[1])
             boxes = np.zeros((num_objs, 4), dtype=np.uint16)
             gt_classes = np.zeros((num_objs), dtype=np.int32)
             overlaps = np.zeros((num_objs, self.num_classes), dtype=np.float32)
             for i in range(num_objs):
-                x1 = float(split_line[2 + i * 4])
-                y1 = float(split_line[3 + i * 4])
-                x2 = float(split_line[4 + i * 4])
-                y2 = float(split_line[5 + i * 4])
+                y1 = float(split_line[2 + i * 4])
+                y2 = float(split_line[3 + i * 4])
+                x1 = float(split_line[4 + i * 4])
+                x2 = float(split_line[5 + i * 4])
                 cls = self._class_to_ind['ear']
+                assert x2 >= x1, 'The x2 should >= x1, No.%d does not apply' %count
                 boxes[i, :] = [x1, y1, x2, y2]
                 gt_classes[i] = cls
                 overlaps[i, cls] = 1.0
@@ -224,6 +226,7 @@ class soton_ear(imdb):
             overlaps = scipy.sparse.csr_matrix(overlaps)
             gt_roidb.append({'boxes': boxes, 'gt_classes': gt_classes, 'gt_overlaps': overlaps, 'flipped': False})
             split_line = f.readline().strip().split()
+            count += 1
 
         f.close()
         return gt_roidb

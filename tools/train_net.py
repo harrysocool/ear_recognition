@@ -76,9 +76,9 @@ if __name__ == '__main__':
         caffe.set_random_seed(cfg.RNG_SEED)
 
     # set up caffe
-    # caffe.set_mode_gpu()
-    # if args.gpu_id is not None:
-    #     caffe.set_device(args.gpu_id)
+    caffe.set_mode_gpu()
+    if args.gpu_id is not None:
+        caffe.set_device(args.gpu_id)
 
     imdb = get_imdb(args.imdb_name)
     print 'Loaded dataset `{:s}` for training'.format(imdb.name)

@@ -6,8 +6,15 @@
 # Written by Ross Girshick
 # --------------------------------------------------------
 import sys
-sys.path.insert(0, "/home/harrysocool/Github/caffe/python")
-sys.path.insert(0, "/home/harrysocool/Github/fast-rcnn/lib")
+if sys.platform == "linux" or sys.platform == "linux2":
+    # linux
+    sys.path.insert(0, "/home/harrysocool/Github/caffe/python")
+    sys.path.insert(0, "/home/harrysocool/Github/fast-rcnn/lib")
+elif sys.platform == "darwin":
+    # OS X
+    sys.path.insert(0, "/Users/harrysocool/Github/caffe/python")
+    sys.path.insert(0, "/Users/harrysocool/Github/fast-rcnn/lib")
+
 import datasets
 from datasets.imdb import imdb
 import os

@@ -38,7 +38,7 @@ def save_mat_boxes(image_fnames, output_filename, cmd):
     print(command)
 
     # Execute command in MATLAB.
-    mc = "matlab -nojvm -r \"try; {}; catch; exit; end; exit\"".format(command)
+    mc = "matlab -nojvm \"try; {}; catch; exit; end; exit\"".format(command)
     pid = subprocess.Popen(
         shlex.split(mc), stdout=open(output_filename, 'w'), cwd=script_dirname)
     retcode = pid.wait()
@@ -132,13 +132,20 @@ if __name__ == '__main__':
     output_path = os.path.join('./data_file/gt_roidb.csv')
 
     image_path_list = listdir_no_hidden(image_path)
-    # image_path_list = ['../2.jpg']
+    image_path_list = ['../2.jpg']
+
+    from pymatbridge import Matlab
+
+    mlab = Matlab(matlab='/Applications/MATLAB_R2011a.app/bin/matlab')
+    mlab.start()
+    res = mlab.run('path/to/yourfunc.m', {'arg1': 3, 'arg2': 5})
+
 
     # save_mat_boxes(image_path_list, method.ss_boxes_outpath, cmd=method.selective_search)
     # all_boxes_list = read_ss_mat_boxes(method.ss_boxes_outpath)
     # draw_boxes(image_path_list[0], all_boxes_list[0])
     #
-    # save_mat_boxes(image_path_list, method.ed_boxes_outpath, cmd=method.edge_detector)
+    save_mat_boxes(image_path_list, method.ed_boxes_outpath, cmd=method.edge_detector)
     all_boxes_list = read_ed_mat_boxes(method.ed_boxes_outpath)
     # print("success loaded")
     draw_boxes(image_path_list[0], all_boxes_list[0][0])

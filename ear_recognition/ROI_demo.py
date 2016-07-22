@@ -38,7 +38,7 @@ def save_mat_boxes(image_fnames, output_filename, cmd):
     print(command)
 
     # Execute command in MATLAB.
-    mc = "matlab -nojvm \"try; {}; catch; exit; end; exit\"".format(command)
+    mc = "matlab -nojvm -r \"try; {}; catch; exit; end; exit\"".format(command)
     pid = subprocess.Popen(
         shlex.split(mc), stdout=open(output_filename, 'w'), cwd=script_dirname)
     retcode = pid.wait()

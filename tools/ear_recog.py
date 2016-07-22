@@ -36,7 +36,7 @@ NETS = {'vgg16': ('VGG16',
         'vgg_cnn_m_1024': ('VGG_CNN_M_1024',
                            'vgg_cnn_m_1024_fast_rcnn_iter_40000.caffemodel'),
         'caffenet': ('CaffeNet',
-                     'caffenet_fast_rcnn_iter_40000.caffemodel')}
+                     'caffenet_fast_rcnn_iter_10000.caffemodel')}
 
 
 def vis_detections(im, class_name, dets, thresh=0.5):
@@ -71,17 +71,42 @@ def vis_detections(im, class_name, dets, thresh=0.5):
     plt.tight_layout()
     plt.draw()
 
-def demo(net, image_name, classes):
+def ROI_boxes(image_path):
+    cmd = 'edge_detector'
+    script_dirname = os.path.join(cfg.ROOT_DIR, 'OP_methods', 'edges')
+    output_filename = os.path.join(cfg.ROOT_DIR, 'ear_recognition', 'data_file', 'demo_boxes.mat')
+
+    # command for matlab excute
+    image_path = "{'"+ image_path + "'}"
+    command = "{}({}, '{}')".format(cmd, image_path, output_filename)
+    print(command)
+
+    # Execute command in MATLAB.
+    mc = "matlab -nojvm -r \"try; {}; catch; exit; end; exit\"".format(command)
+
+    # import the packages needed for MATLAB
+    import subprocess
+    import shlex
+
+    pid = subprocess.Popen(
+        shlex.split(mc), stdout=open(output_filename, 'w'), cwd=script_dirname)
+    retcode = pid.wait()
+    if retcode != 0:
+        raise Exception("Matlab script did not exit successfully!")
+
+    ROI_proposals = sio.loadmat(output_filename)['all_boxes'][0]
+
+    return ROI_proposals
+
+
+def demo(net, image_path, classes):
     """Detect object classes in an image using pre-computed object proposals."""
 
     # Load pre-computed Selected Search object proposals
-    box_file = os.path.join(cfg.ROOT_DIR, 'data', 'demo',
-                            image_name + '_boxes.mat')
-    obj_proposals = sio.loadmat(box_file)['boxes']
+    obj_proposals = ROI_boxes(image_path)
 
     # Load the demo image
-    im_file = os.path.join(cfg.ROOT_DIR, 'data', 'demo', image_name + '.jpg')
-    im = cv2.imread(im_file)
+    im = cv2.imread(image_path)
 
     # Detect all object classes and regress object bounds
     timer = Timer()
@@ -129,7 +154,7 @@ if __name__ == '__main__':
 
     prototxt = os.path.join(cfg.ROOT_DIR, 'models', NETS[args.demo_net][0],
                             'test.prototxt')
-    caffemodel = os.path.join(cfg.ROOT_DIR, 'data', 'fast_rcnn_models',
+    caffemodel = os.path.join(cfg.ROOT_DIR, 'output', 'default', 'soton_ear',
                               NETS[args.demo_net][1])
 
     if not os.path.isfile(caffemodel):
@@ -140,18 +165,18 @@ if __name__ == '__main__':
         caffe.set_mode_cpu()
     else:
         pass
-        # caffe.set_mode_gpu()
-        # caffe.set_device(args.gpu_id)
+        caffe.set_mode_gpu()
+        caffe.set_device(args.gpu_id)
     net = caffe.Net(prototxt, caffemodel, caffe.TEST)
 
     print '\n\nLoaded network {:s}'.format(caffemodel)
 
     print '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
     print 'Demo for data/demo/000004.jpg'
-    demo(net, '000004', ('car',))
+    demo(net, '/home/harrysocool/Github/fast-rcnn/1.jpg', ('ear',))
 
-    print '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
-    print 'Demo for data/demo/001551.jpg'
-    demo(net, '001551', ('sofa', 'tvmonitor'))
+    # print '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
+    # print 'Demo for data/demo/001551.jpg'
+    # demo(net, '001551', ('sofa', 'tvmonitor'))
 
     plt.show()

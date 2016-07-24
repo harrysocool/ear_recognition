@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+
 """
 Created on 16/6/25 21:48 2016
 
@@ -134,11 +134,16 @@ if __name__ == '__main__':
     image_path_list = listdir_no_hidden(image_path)
     image_path_list = ['../2.jpg']
 
+    import sys
+    sys.path.insert(0, '/home/harrysocool/Github/fast-rcnn/tools')
     from pymatbridge import Matlab
 
-    mlab = Matlab(matlab='/Applications/MATLAB_R2011a.app/bin/matlab')
+    mlab = Matlab(matlab='/usr/local/bin/matlab', port=4000)
     mlab.start()
-    res = mlab.run('path/to/yourfunc.m', {'arg1': 3, 'arg2': 5})
+    script_path = '/home/harrysocool/Github/fast-rcnn/OP_methods/edges/edge_detector1.m'
+    image_path = '/home/harrysocool/Github/fast-rcnn/1.jpg'
+    out_path = '/home/harrysocool/Github/fast-rcnn/ear_recognition/data_file/demo_boxes.mat'
+    res = mlab.run(script_path, {'image': image_path, 'out': out_path})['result']
 
 
     # save_mat_boxes(image_path_list, method.ss_boxes_outpath, cmd=method.selective_search)

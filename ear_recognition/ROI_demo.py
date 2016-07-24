@@ -140,10 +140,8 @@ if __name__ == '__main__':
 
     mlab = Matlab(matlab='/usr/local/bin/matlab', port=4000)
     mlab.start()
-    script_path = '/home/harrysocool/Github/fast-rcnn/OP_methods/edges/edge_detector1.m'
-    image_path = '/home/harrysocool/Github/fast-rcnn/1.jpg'
-    out_path = '/home/harrysocool/Github/fast-rcnn/ear_recognition/data_file/demo_boxes.mat'
-    res = mlab.run(script_path, {'image': image_path, 'out': out_path})['result']
+    script_path = '/home/harrysocool/Github/fast-rcnn/OP_methods/edges/edge_detector_demo.m'
+    res = mlab.run(script_path, {'image_index': 1, 'demo_index': 0})['boxes']
 
 
     # save_mat_boxes(image_path_list, method.ss_boxes_outpath, cmd=method.selective_search)

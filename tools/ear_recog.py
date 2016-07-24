@@ -72,30 +72,25 @@ def vis_detections(im, class_name, dets, thresh=0.5):
     plt.draw()
 
 def ROI_boxes(image_path):
-    cmd = 'edge_detector'
-    script_dirname = os.path.join(cfg.ROOT_DIR, 'OP_methods', 'edges')
+
+    from pymatbridge import Matlab
+    # cmd = 'edge_detector'
+    script_dirname = os.path.join(cfg.ROOT_DIR, 'OP_methods', 'edges', 'edge_detector1.m')
+    # print(script_dirname)
     output_filename = os.path.join(cfg.ROOT_DIR, 'ear_recognition', 'data_file', 'demo_boxes.mat')
+    print(output_filename)
+
+    # initialize the MATLAB server
+    matlab = Matlab(matlab='/usr/local/bin/matlab', port=4000)
+    matlab.start()
 
     # command for matlab excute
-    image_path = "{'"+ image_path + "'}"
-    command = "{}({}, '{}')".format(cmd, image_path, output_filename)
-    print(command)
+    # image_path1 = "{'"+ image_path + "'}"
+    # command = "'{}', ({}, '{}')".format(script_dirname, image_path, output_filename)
+    # print(image_path1)
+    ROI_proposals = matlab.run(script_dirname, {'image': image_path, 'out': output_filename})['result']
 
-    # Execute command in MATLAB.
-    mc = "matlab -nojvm -r \"try; {}; catch; exit; end; exit\"".format(command)
-
-    # import the packages needed for MATLAB
-    import subprocess
-    import shlex
-
-    pid = subprocess.Popen(
-        shlex.split(mc), stdout=open(output_filename, 'w'), cwd=script_dirname)
-    retcode = pid.wait()
-    if retcode != 0:
-        raise Exception("Matlab script did not exit successfully!")
-
-    ROI_proposals = sio.loadmat(output_filename)['all_boxes'][0]
-
+    print(ROI_proposals)
     return ROI_proposals
 
 

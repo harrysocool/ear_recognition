@@ -4,9 +4,9 @@
 	branch = fast-rcnn
 [submodule "selective_search_ijcv_with_python"]
 	path = OP_methods/selective_search_ijcv_with_python
-	url = https://github.com/sergeyk/selective_search_ijcv_with_python.git
+	url = https://github.com/harrysocool/selective_search_ijcv_with_python.git
 	branch = master
 [submodule "edges"]
 	path = OP_methods/edges
-	url = https://github.com/pdollar/edges.git
+	url = https://github.com/harrysocool/edges.git
 	branch = master

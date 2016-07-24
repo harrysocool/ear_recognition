@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+
 """
 Created on 16/6/25 21:48 2016
 
@@ -132,13 +132,25 @@ if __name__ == '__main__':
     output_path = os.path.join('./data_file/gt_roidb.csv')
 
     image_path_list = listdir_no_hidden(image_path)
-    # image_path_list = ['../2.jpg']
+    image_path_list = ['../2.jpg']
+
+    import sys
+    sys.path.insert(0, '/home/harrysocool/Github/fast-rcnn/tools')
+    from pymatbridge import Matlab
+
+    mlab = Matlab(matlab='/usr/local/bin/matlab', port=4000)
+    mlab.start()
+    script_path = '/home/harrysocool/Github/fast-rcnn/OP_methods/edges/edge_detector1.m'
+    image_path = '/home/harrysocool/Github/fast-rcnn/1.jpg'
+    out_path = '/home/harrysocool/Github/fast-rcnn/ear_recognition/data_file/demo_boxes.mat'
+    res = mlab.run(script_path, {'image': image_path, 'out': out_path})['result']
+
 
     # save_mat_boxes(image_path_list, method.ss_boxes_outpath, cmd=method.selective_search)
     # all_boxes_list = read_ss_mat_boxes(method.ss_boxes_outpath)
     # draw_boxes(image_path_list[0], all_boxes_list[0])
     #
-    # save_mat_boxes(image_path_list, method.ed_boxes_outpath, cmd=method.edge_detector)
+    save_mat_boxes(image_path_list, method.ed_boxes_outpath, cmd=method.edge_detector)
     all_boxes_list = read_ed_mat_boxes(method.ed_boxes_outpath)
     # print("success loaded")
     draw_boxes(image_path_list[0], all_boxes_list[0][0])

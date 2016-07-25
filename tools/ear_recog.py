@@ -12,6 +12,7 @@ Demo script showing detections in sample images.
 
 See README.md for installation instructions before running.
 """
+import linecache
 
 import _init_paths
 from lib.fast_rcnn.config import cfg
@@ -67,12 +68,12 @@ def vis_detections(im, class_name, dets, thresh=0.5):
     plt.tight_layout()
     plt.draw()
 
-def ROI_boxes(image_path):
+def ROI_boxes(image_filepath):
     # add the matlab directory path
     matlab.eval("cd('/home/harrysocool/Github/fast-rcnn/OP_methods/edges')")
     matlab.eval("addpath(genpath('/home/harrysocool/Github/fast-rcnn/OP_methods/edges'))")
     # matlab.eval("toolboxCompile")
-    matlab.eval("res = edge_detector_demo(1,0)")
+    matlab.eval("res = edge_detector_demo('{}')".format(image_filepath))
     raw_boxes = matlab.get('res')
     subtractor = np.array((1, 1, 0, 0))[np.newaxis, :]
     correct_boxes = np.zeros((len(raw_boxes), 4))
@@ -83,14 +84,14 @@ def ROI_boxes(image_path):
     return correct_boxes
 
 
-def demo(net, image_path, classes):
+def demo(net, image_filepath, classes):
     """Detect object classes in an image using pre-computed object proposals."""
 
     # Load pre-computed Selected Search object proposals
-    obj_proposals = ROI_boxes(image_path)
+    obj_proposals = ROI_boxes(image_filepath)
 
     # Load the demo image
-    im = cv2.imread(image_path)
+    im = cv2.imread(image_filepath)
 
     # Detect all object classes and regress object bounds
     timer = Timer()
@@ -128,7 +129,10 @@ def parse_args():
                         action='store_true')
     parser.add_argument('--net', dest='demo_net', help='Network to use [vgg16]',
                         choices=NETS.keys(), default='vgg16')
-
+    parser.add_argument('--index', dest='image_index', help='the index number of datasets image',
+                        default=1, type=int)
+    parser.add_argument('--video', dest='video_mode', help='Use video Frame or not(overides --image_index)',
+                        action='store_true')
     args = parser.parse_args()
 
     return args
@@ -153,16 +157,21 @@ if __name__ == '__main__':
         caffe.set_device(args.gpu_id)
     net = caffe.Net(prototxt, caffemodel, caffe.TEST)
 
-    print '\n\nLoaded network {:s}'.format(caffemodel)
+    print '\nLoaded network {:s}'.format(caffemodel)
+
+    if args.video_mode:
+        image_filepath = os.path.join(cfg.ROOT_DIR, 'ear_recognition', 'data_file', 'video_frame.jpg')
+    else:
+        index_csv_path = os.path.join(cfg.ROOT_DIR, 'ear_recognition', 'data_file', 'image_index_list.csv')
+        image_filepath = linecache.getline(index_csv_path, args.image_index-1).strip('\n')
 
     # initialize the MATLAB server
-    print '\n\nMATLAB Connected'
+    print '\nMATLAB Connected'
     import matlab_wrapper
     matlab = matlab_wrapper.MatlabSession()
 
     print '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
-    print 'Demo for data/demo/000004.jpg'
-    demo(net, '/home/harrysocool/Github/fast-rcnn/2.jpg', ('ear',))
+    demo(net, image_filepath, ('ear',))
 
     # print '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
     # print 'Demo for data/demo/001551.jpg'

@@ -1,11 +1,8 @@
-from pymatbridge import Matlab
+import matlab_wrapper
+matlab = matlab_wrapper.MatlabSession()
 
-# Initialise MATLAB
-mlab = Matlab(matlab='/usr/local/bin/matlab', port=4000)
-# Start the server
-mlab.start()
-# Run a test function: just adds 1 to the argument a
-for i in range(10):
-    print mlab.run('/home/harrysocool/Github/python-matlab-bridge/test.m', {'a': '/home/harrysocool/Github/fast-rcnn/tools', 'b':'/home/harrysocool/Github/fast-rcnn/tools'})['result']
-# Stop the MATLAB server
-mlab.stop()
+matlab.eval("cd('/home/harrysocool/Github/fast-rcnn/OP_methods/edges')")
+matlab.eval("addpath(genpath('/home/harrysocool/Github/fast-rcnn/OP_methods/edges'))")
+# matlab.eval("toolboxCompile")
+matlab.eval("res = edge_detector_demo(1,0)")
+print(matlab.get('res'))

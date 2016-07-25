@@ -24,12 +24,7 @@ import scipy.io as sio
 import caffe, os, sys, cv2
 import argparse
 
-CLASSES = ('__background__',
-           'aeroplane', 'bicycle', 'bird', 'boat',
-           'bottle', 'bus', 'car', 'cat', 'chair',
-           'cow', 'diningtable', 'dog', 'horse',
-           'motorbike', 'person', 'pottedplant',
-           'sheep', 'sofa', 'train', 'tvmonitor')
+CLASSES = ('__background__', 'ear')
 
 NETS = {'vgg16': ('VGG16',
                   'vgg16_fast_rcnn_iter_40000.caffemodel'),
@@ -73,24 +68,24 @@ def vis_detections(im, class_name, dets, thresh=0.5):
 
 def ROI_boxes(image_path):
 
-    from pymatbridge import Matlab
-    # cmd = 'edge_detector'
-    script_dirname = os.path.join(cfg.ROOT_DIR, 'OP_methods', 'edges', 'edge_detector1.m')
-    # print(script_dirname)
-    output_filename = os.path.join(cfg.ROOT_DIR, 'ear_recognition', 'data_file', 'demo_boxes.mat')
-    print(output_filename)
+
+    # # cmd = 'edge_detector'
+    # script_dirname = os.path.join(cfg.ROOT_DIR, 'OP_methods', 'edges', 'edge_detector1.m')
+    # # print(script_dirname)
+    # output_filename = os.path.join(cfg.ROOT_DIR, 'ear_recognition', 'data_file', 'demo_boxes.mat')
+    # print(output_filename)
 
     # initialize the MATLAB server
-    matlab = Matlab(matlab='/usr/local/bin/matlab', port=4000)
-    matlab.start()
+    import matlab_wrapper
+    matlab = matlab_wrapper.MatlabSession()
 
-    # command for matlab excute
-    # image_path1 = "{'"+ image_path + "'}"
-    # command = "'{}', ({}, '{}')".format(script_dirname, image_path, output_filename)
-    # print(image_path1)
-    ROI_proposals = matlab.run(script_dirname, {'image': image_path, 'out': output_filename})['result']
+    # add the matlab directory path
+    matlab.eval("cd('/home/harrysocool/Github/fast-rcnn/OP_methods/edges')")
+    matlab.eval("addpath(genpath('/home/harrysocool/Github/fast-rcnn/OP_methods/edges'))")
+    # matlab.eval("toolboxCompile")
+    matlab.eval("res = edge_detector_demo(1,0)")
+    ROI_proposals = matlab.get('res')
 
-    print(ROI_proposals)
     return ROI_proposals
 
 

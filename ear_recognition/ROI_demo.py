@@ -140,7 +140,8 @@ if __name__ == '__main__':
     matlab.eval("addpath(genpath('/home/harrysocool/Github/fast-rcnn/OP_methods/edges'))")
     # matlab.eval("toolboxCompile")
     matlab.eval("res = edge_detector_demo(1,0)")
-    print(matlab.get('res'))
+    raw_boxes = matlab.get('res')
+
 
     # save_mat_boxes(image_path_list, method.ss_boxes_outpath, cmd=method.selective_search)
     # all_boxes_list = read_ss_mat_boxes(method.ss_boxes_outpath)

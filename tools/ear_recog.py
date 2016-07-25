@@ -38,6 +38,7 @@ def vis_detections(im, class_name, dets, thresh=0.5):
     """Draw detected bounding boxes."""
     inds = np.where(dets[:, -1] >= thresh)[0]
     if len(inds) == 0:
+        print('\nNo {} detected'.format(class_name))
         return
 
     im = im[:, :, (2, 1, 0)]
@@ -67,26 +68,19 @@ def vis_detections(im, class_name, dets, thresh=0.5):
     plt.draw()
 
 def ROI_boxes(image_path):
-
-
-    # # cmd = 'edge_detector'
-    # script_dirname = os.path.join(cfg.ROOT_DIR, 'OP_methods', 'edges', 'edge_detector1.m')
-    # # print(script_dirname)
-    # output_filename = os.path.join(cfg.ROOT_DIR, 'ear_recognition', 'data_file', 'demo_boxes.mat')
-    # print(output_filename)
-
-    # initialize the MATLAB server
-    import matlab_wrapper
-    matlab = matlab_wrapper.MatlabSession()
-
     # add the matlab directory path
     matlab.eval("cd('/home/harrysocool/Github/fast-rcnn/OP_methods/edges')")
     matlab.eval("addpath(genpath('/home/harrysocool/Github/fast-rcnn/OP_methods/edges'))")
     # matlab.eval("toolboxCompile")
     matlab.eval("res = edge_detector_demo(1,0)")
-    ROI_proposals = matlab.get('res')
+    raw_boxes = matlab.get('res')
+    subtractor = np.array((1, 1, 0, 0))[np.newaxis, :]
+    correct_boxes = np.zeros((len(raw_boxes), 4))
+    for idx in range(len(raw_boxes)):
+        correct_boxes[idx] = raw_boxes[idx] - subtractor
+        correct_boxes[idx][2:4] = correct_boxes[idx][0:2] + correct_boxes[idx][2:4]
 
-    return ROI_proposals
+    return correct_boxes
 
 
 def demo(net, image_path, classes):
@@ -161,9 +155,14 @@ if __name__ == '__main__':
 
     print '\n\nLoaded network {:s}'.format(caffemodel)
 
+    # initialize the MATLAB server
+    print '\n\nMATLAB Connected'
+    import matlab_wrapper
+    matlab = matlab_wrapper.MatlabSession()
+
     print '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
     print 'Demo for data/demo/000004.jpg'
-    demo(net, '/home/harrysocool/Github/fast-rcnn/1.jpg', ('ear',))
+    demo(net, '/home/harrysocool/Github/fast-rcnn/2.jpg', ('ear',))
 
     # print '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
     # print 'Demo for data/demo/001551.jpg'

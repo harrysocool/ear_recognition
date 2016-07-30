@@ -17,7 +17,7 @@ def write_list_to_csv(list1, path_out, header=False):
     temp.to_csv(path_out, index=False, header=header)
 
 
-def save_gt_roidb_csv(data_path, csv_path, out_path):
+def save_gt_roidb_csv(data_path, csv_path, image_index_output_path, gt_output_path):
     box_list = pd.read_csv(csv_path, header=0).get_values()
 
     image_path_list = listdir_no_hidden(data_path)
@@ -35,8 +35,8 @@ def save_gt_roidb_csv(data_path, csv_path, out_path):
         s2 = x1+' '+ y1+' '+x2+' '+y2
         new_list.append(s1 + ' 1 ' + s2)
         new_list1.append(s1)
-    write_list_to_csv(new_list, out_path)
-    write_list_to_csv(new_list1, './data_file/image_index_list.csv')
+    write_list_to_csv(new_list, gt_output_path)
+    write_list_to_csv(new_list1, image_index_output_path)
 
 def initialize_matlab():
     matlab = matlab_wrapper.MatlabSession()
@@ -56,18 +56,26 @@ if __name__ == '__main__':
     datasets_path = '/home/harrysocool/Github/fast-rcnn/DatabaseEars/'
     csv_path = os.path.join(datasets_path, 'boundaries.csv')
     image_path = os.path.join(datasets_path, 'DatabaseEars/')
-    csv_output_path = os.path.join(datasets_path, '../','ear_recognition/data_file/image_index_list.csv')
+    gt_output_path = os.path.join(datasets_path, '../','ear_recognition/data_file/gt_roidb.csv')
+    image_index_output_path = os.path.join(datasets_path, '../', 'ear_recognition/data_file/image_index_list.csv')
     mat_output_filename = os.path.join(datasets_path, '../','ear_recognition/data_file/all_boxes.mat')
 
-    # save_gt_roidb_csv(image_path, csv_path, csv_output_path)
-
+    # save_gt_roidb_csv(image_path, csv_path, image_index_output_path, gt_output_path)
+    #
     matlab = initialize_matlab()
 
-    list1 = pd.read_csv(csv_output_path, header=None).values.flatten().tolist()
+    list1 = pd.read_csv(image_index_output_path, header=None).values.flatten().tolist()
+    # list1 = listdir_no_hidden(image_path)
 
     cmd = 'selective_search'
 
-    fnames_cell = '{' + ','.join("'{}'".format(x) for x in list1) + '}'
+    # fnames_cell = "{" + ",".join("'{}'".format(x) for x in list1) + "}"
+    fnames_cell = "{"
+    for x in list1:
+        fnames_cell += "'" + x+ "',"
+    fnames_cell += "}"
+    # fnames_cell = "{'"+list1[0]+"','"+list1[1] +"'}"
     command = "res = {}({}, '{}')".format(cmd, fnames_cell, mat_output_filename)
+    print(command)
 
     matlab.eval(command)

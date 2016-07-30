@@ -141,13 +141,13 @@ class soton_ear(imdb):
 
         box_list = []
         for i in xrange(raw_data.shape[0]):
-        # box_list.append(raw_data[i][:,(1, 0, 3, 2)] - 1)#原来的Psacalvoc调换了列，我这里box的顺序是x1 ,y1,x2,y2 由EdgeBox格式为x1,y1,w,h经过修改
-            boxes = raw_data[i]
-            correct_boxes = np.zeros((len(boxes), 4))
-            correct_boxes[:, (0, 1)] = boxes[:, (0, 1)] - 1
-            correct_boxes[:, (2, 3)] = boxes[:, (0, 1)] + boxes[:, (2, 3)]
-            assert (correct_boxes[:, 2] >= correct_boxes[:, 0]).all(), 'The x2 should >= x1, No.%d does not apply' %i
-            box_list.append(correct_boxes)
+            box_list.append(raw_data[i][:,(1, 0, 3, 2)] - 1)#原来的Psacalvoc调换了列，我这里box的顺序是x1 ,y1,x2,y2 由EdgeBox格式为x1,y1,w,h经过修改
+            # boxes = raw_data[i]
+            # correct_boxes = np.zeros((len(boxes), 4))
+            # correct_boxes[:, (0, 1)] = boxes[:, (0, 1)] - 1
+            # correct_boxes[:, (2, 3)] = boxes[:, (0, 1)] + boxes[:, (2, 3)]
+            # assert (correct_boxes[:, 2] >= correct_boxes[:, 0]).all(), 'The x2 should >= x1, No.%d does not apply' %i
+            # box_list.append(correct_boxes)
 
         roidb = self.create_roidb_from_box_list(box_list, gt_roidb)
 

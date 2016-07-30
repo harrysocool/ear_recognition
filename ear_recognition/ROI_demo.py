@@ -5,6 +5,7 @@ Created on 16/6/25 21:48 2016
 @author: harry sun
 """
 import os
+import pandas as pd
 import numpy as np
 from PIL import Image, ImageDraw
 

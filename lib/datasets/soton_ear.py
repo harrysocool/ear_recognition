@@ -134,7 +134,7 @@ class soton_ear(imdb):
 
     def _load_selective_search_roidb(self, gt_roidb):  # 已经修改
         # filename = os.path.abspath(os.path.join(self.cache_path, '..','selective_search_data',self.name + '.mat'))
-        filename = os.path.join(self._data_path, 'ed_all_boxes.mat')  # 这里输入相对应的预选框文件路径
+        filename = os.path.join(self._data_path, 'all_boxes.mat')  # 这里输入相对应的预选框文件路径
         assert os.path.exists(filename), \
             'Selective search data not found at: {}'.format(filename)
         raw_data = sio.loadmat(filename)['all_boxes'].ravel()

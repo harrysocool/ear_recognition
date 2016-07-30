@@ -220,10 +220,10 @@ class soton_ear(imdb):
             gt_classes = np.zeros((num_objs), dtype=np.int32)
             overlaps = np.zeros((num_objs, self.num_classes), dtype=np.float32)
             for i in range(num_objs):
-                y1 = float(split_line[2 + i * 4])
-                y2 = float(split_line[3 + i * 4])
-                x1 = float(split_line[4 + i * 4])
-                x2 = float(split_line[5 + i * 4])
+                x1 = float(split_line[2 + i * 4])
+                y1 = float(split_line[3 + i * 4])
+                x2 = float(split_line[4 + i * 4])
+                y2 = float(split_line[5 + i * 4])
                 cls = self._class_to_ind['ear']
                 assert x2 >= x1, 'The x2 should >= x1, No.%d does not apply' %count
                 boxes[i, :] = [x1, y1, x2, y2]

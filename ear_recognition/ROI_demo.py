@@ -80,10 +80,9 @@ def read_ed_mat_boxes(output_filename):
     return correct_boxes_list
 
 
-def draw_boxes(image_path, boxes_list):
+def draw_boxes(img, boxes_list, color):
     print('Totally %d boxes' % (len(boxes_list)))
 
-    img = Image.open(image_path)
     dr = ImageDraw.Draw(img)
     if isinstance(boxes_list, list):
         for box in boxes_list:
@@ -91,12 +90,12 @@ def draw_boxes(image_path, boxes_list):
             dr.rectangle(box, outline="red")
     else:
         box = map(int, tuple(boxes_list))
-        dr.rectangle(box, outline="red")
-    img.show()
+        dr.rectangle(box, outline=color)
+    return img
 
 def listdir_no_hidden(path):
     list1 = []
-    for f in os.listdir(path):
+    for f in sorted(os.listdir(path)):
         if not f.startswith('.'):
             p = os.path.abspath(path)
             list1.append(os.path.join(p, f))
@@ -147,14 +146,19 @@ if __name__ == '__main__':
     # all_boxes_list = read_ss_mat_boxes(method.ss_boxes_outpath)
     # draw_boxes(image_path_list[0], all_boxes_list[0])
     #
-    save_mat_boxes(image_path_list, method.ed_boxes_outpath, cmd=method.edge_detector)
-    # all_boxes_list = read_ed_mat_boxes(method.ed_boxes_outpath)
-    # print("success loaded")
-    # draw_boxes(image_path_list[0], all_boxes_list[0][0])
+    # save_mat_boxes(image_path_list, method.ed_boxes_outpath, cmd=method.edge_detector)
+    all_boxes_list = read_ed_mat_boxes(method.ed_boxes_outpath)
+    print("success loaded")
 
-    # save_gt_roidb_csv(image_path, csv_path, output_path)
 
-    # list1 = pd.read_csv(output_path, header=None).values.flatten().tolist()
-    # l = list1[1].split(' ')
-    # draw_boxes(l[0], (l[-1], l[-4], l[-2], l[-3]))
+    save_gt_roidb_csv(image_path, csv_path, output_path)
+
+    list1 = pd.read_csv(output_path, header=None).values.flatten().tolist()
+    l = list1[1].split(' ')
+
+    img = Image.open(l[0])
+    I = draw_boxes(img, all_boxes_list[0][0], 'red')
+
+    I2 = draw_boxes(I, (l[-1], l[-4], l[-2], l[-3]), 'green')
+    I2.show()
     # pass

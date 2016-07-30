@@ -134,27 +134,27 @@ if __name__ == '__main__':
     image_path_list = listdir_no_hidden(image_path)
     # image_path_list = ['../2.jpg']
 
-    import matlab_wrapper
-    matlab = matlab_wrapper.MatlabSession()
-    matlab.eval("cd('/home/harrysocool/Github/fast-rcnn/OP_methods/edges')")
-    matlab.eval("addpath(genpath('/home/harrysocool/Github/fast-rcnn/OP_methods/edges'))")
-    # matlab.eval("toolboxCompile")
-    matlab.eval("res = edge_detector_demo(1,0)")
-    raw_boxes = matlab.get('res')
+    # import matlab_wrapper
+    # matlab = matlab_wrapper.MatlabSession()
+    # matlab.eval("cd('/home/harrysocool/Github/fast-rcnn/OP_methods/edges')")
+    # matlab.eval("addpath(genpath('/home/harrysocool/Github/fast-rcnn/OP_methods/edges'))")
+    # # matlab.eval("toolboxCompile")
+    # matlab.eval("res = edge_detector_demo(1,0)")
+    # raw_boxes = matlab.get('res')
 
 
     # save_mat_boxes(image_path_list, method.ss_boxes_outpath, cmd=method.selective_search)
     # all_boxes_list = read_ss_mat_boxes(method.ss_boxes_outpath)
     # draw_boxes(image_path_list[0], all_boxes_list[0])
     #
-    # save_mat_boxes(image_path_list, method.ed_boxes_outpath, cmd=method.edge_detector)
+    save_mat_boxes(image_path_list, method.ed_boxes_outpath, cmd=method.edge_detector)
     # all_boxes_list = read_ed_mat_boxes(method.ed_boxes_outpath)
     # print("success loaded")
     # draw_boxes(image_path_list[0], all_boxes_list[0][0])
 
-    save_gt_roidb_csv(image_path, csv_path, output_path)
+    # save_gt_roidb_csv(image_path, csv_path, output_path)
 
-    list1 = pd.read_csv(output_path, header=None).values.flatten().tolist()
-    l = list1[1].split(' ')
-    draw_boxes(l[0], (l[-1], l[-4], l[-2], l[-3]))
-    pass
+    # list1 = pd.read_csv(output_path, header=None).values.flatten().tolist()
+    # l = list1[1].split(' ')
+    # draw_boxes(l[0], (l[-1], l[-4], l[-2], l[-3]))
+    # pass

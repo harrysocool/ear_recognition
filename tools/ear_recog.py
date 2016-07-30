@@ -32,10 +32,10 @@ NETS = {'vgg16': ('VGG16',
         'vgg_cnn_m_1024': ('VGG_CNN_M_1024',
                            'vgg_cnn_m_1024_fast_rcnn_iter_40000.caffemodel'),
         'caffenet': ('CaffeNet',
-                     'caffenet_fast_rcnn_iter_10000.caffemodel')}
+                     'caffenet_fast_rcnn_iter_40000.caffemodel')}
 
 
-def vis_detections(im, class_name, dets, thresh=0.5):
+def vis_detections(im, class_name, dets, thresh=0.8):
     """Draw detected bounding boxes."""
     inds = np.where(dets[:, -1] >= thresh)[0]
     if len(inds) == 0:
@@ -102,8 +102,8 @@ def demo(net, image_filepath, classes):
            '{:d} object proposals').format(timer.total_time, boxes.shape[0])
 
     # Visualize detections for each class
-    CONF_THRESH = 0.8
-    NMS_THRESH = 0.3
+    CONF_THRESH = 0.7
+    NMS_THRESH = 0.1
     for cls in classes:
         cls_ind = CLASSES.index(cls)
         cls_boxes = boxes[:, 4*cls_ind:4*(cls_ind + 1)]
@@ -131,7 +131,8 @@ def parse_args():
                         choices=NETS.keys(), default='vgg16')
     parser.add_argument('--index', dest='image_index', help='the index number of datasets image',
                         default=1, type=int)
-    parser.add_argument('--video', dest='video_mode', help='Use video Frame or not(overides --image_index)',
+    parser.add_argument('--video', dest='video_mode', 
+    					help='Use video Frame or not(overides --image_index)',
                         action='store_true')
     args = parser.parse_args()
 
@@ -162,8 +163,10 @@ if __name__ == '__main__':
     if args.video_mode:
         image_filepath = os.path.join(cfg.ROOT_DIR, 'ear_recognition', 'data_file', 'video_frame.jpg')
     else:
+    	pass
         index_csv_path = os.path.join(cfg.ROOT_DIR, 'ear_recognition', 'data_file', 'image_index_list.csv')
         image_filepath = linecache.getline(index_csv_path, args.image_index-1).strip('\n')
+        print(image_filepath)
 
     # initialize the MATLAB server
     print '\nMATLAB Connected'

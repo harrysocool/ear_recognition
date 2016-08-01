@@ -104,7 +104,7 @@ def demo(net, image_filepath, classes):
            '{:d} object proposals').format(timer.total_time, boxes.shape[0])
 
     # Visualize detections for each class
-    CONF_THRESH = 0.05
+    CONF_THRESH = 0.8
     NMS_THRESH = 0.3
     for cls in classes:
         cls_ind = CLASSES.index(cls)
@@ -142,6 +142,10 @@ def parse_args():
 
 if __name__ == '__main__':
     args = parse_args()
+
+    args.gpu_id = 0
+    args.demo_net = 'caffenet'
+    args.image_index = index
 
     prototxt = os.path.join(cfg.ROOT_DIR, 'models', NETS[args.demo_net][0],
                             'test.prototxt')

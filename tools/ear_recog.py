@@ -70,16 +70,18 @@ def vis_detections(im, class_name, dets, thresh=0.8):
 
 def ROI_boxes(image_filepath):
     # add the matlab directory path
-    matlab.eval("cd('/home/harrysocool/Github/fast-rcnn/OP_methods/edges')")
-    matlab.eval("addpath(genpath('/home/harrysocool/Github/fast-rcnn/OP_methods/edges'))")
+    # matlab.eval("cd('/home/harrysocool/Github/fast-rcnn/OP_methods/edges')")
+    # matlab.eval("addpath(genpath('/home/harrysocool/Github/fast-rcnn/OP_methods/edges'))")
     # matlab.eval("toolboxCompile")
-    matlab.eval("res = edge_detector_demo('{}')".format(image_filepath))
+
+        # selective_search OP_method
+    matlab.eval("cd('/home/harrysocool/Github/fast-rcnn/OP_methods/selective_search_ijcv_with_python')")
+    matlab.eval("addpath(genpath('/home/harrysocool/Github/fast-rcnn/OP_methods/selective_search_ijcv_with_python'))")
+    matlab.eval("res = selective_search_demo('{}')".format(image_filepath))
     raw_boxes = matlab.get('res')
-    subtractor = np.array((1, 1, 0, 0))[np.newaxis, :]
-    correct_boxes = np.zeros((len(raw_boxes), 4))
-    for idx in range(len(raw_boxes)):
-        correct_boxes[idx] = raw_boxes[idx] - subtractor
-        correct_boxes[idx][2:4] = correct_boxes[idx][0:2] + correct_boxes[idx][2:4]
+    raw_boxes = np.asarray(raw_boxes)
+
+    correct_boxes = raw_boxes[:,(1, 0, 3, 2)] - 1
 
     return correct_boxes
 
@@ -102,8 +104,8 @@ def demo(net, image_filepath, classes):
            '{:d} object proposals').format(timer.total_time, boxes.shape[0])
 
     # Visualize detections for each class
-    CONF_THRESH = 0.7
-    NMS_THRESH = 0.1
+    CONF_THRESH = 0.05
+    NMS_THRESH = 0.3
     for cls in classes:
         cls_ind = CLASSES.index(cls)
         cls_boxes = boxes[:, 4*cls_ind:4*(cls_ind + 1)]
@@ -163,7 +165,7 @@ if __name__ == '__main__':
     if args.video_mode:
         image_filepath = os.path.join(cfg.ROOT_DIR, 'ear_recognition', 'data_file', 'video_frame.jpg')
     else:
-    	pass
+        pass
         index_csv_path = os.path.join(cfg.ROOT_DIR, 'ear_recognition', 'data_file', 'image_index_list.csv')
         image_filepath = linecache.getline(index_csv_path, args.image_index-1).strip('\n')
         print(image_filepath)

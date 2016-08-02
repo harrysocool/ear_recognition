@@ -69,6 +69,26 @@ def vis_detections(im, class_name, dets, thresh=0.8):
     plt.tight_layout()
     plt.draw()
 
+def visualise(im, class_name, dets, thresh=0.8):
+    """Draw detected bounding boxes."""
+    inds = np.where(dets[:, -1] >= thresh)[0]
+    if len(inds) == 0:
+        print('\nNo {} detected'.format(class_name))
+        cv2.imshow('{} detections with p({} | box) >= {:.1f}'.format(
+            class_name, class_name, thresh), im)
+        return
+    for i in inds:
+        bbox = dets[i, :4]
+        score = dets[i, -1]
+
+        cv2.rectangle(im,(bbox[0], bbox[1]), (bbox[2], bbox[3]), (0, 255, 0), 2)
+        font = cv2.FONT_HERSHEY_SIMPLEX
+        cv2.putText(im, '{:s} {:.3f}'.format(class_name, score),
+                    (int(bbox[0]), int(bbox[1] - 2)), font, 1, (0,255,0), 1)
+    cv2.imshow('{} detections with p({} | box) >= {:.1f}'.format(
+        class_name, class_name, thresh), im)
+
+
 def ROI_boxes(image_filepath):
     # add the matlab directory path
     # matlab.eval("cd('/home/harrysocool/Github/fast-rcnn/OP_methods/edges')")
@@ -87,7 +107,7 @@ def ROI_boxes(image_filepath):
     return correct_boxes
 
 
-def demo(net, image_filepath, classes):
+def demo(net, image_filepath, classes, video_mode):
     """Detect object classes in an image using pre-computed object proposals."""
 
     # Load pre-computed Selected Search object proposals
@@ -124,7 +144,10 @@ def demo(net, image_filepath, classes):
             print('{} No Ear detected').format(count)
         print 'All {} detections with p({} | box) >= {:.1f}'.format(cls, cls,
                                                                     CONF_THRESH)
-        vis_detections(im, cls, dets, thresh=CONF_THRESH)
+        if video_mode:
+            visualise(im, cls, dets, thresh=CONF_THRESH)
+        else:
+            vis_detections(im, cls, dets, thresh=CONF_THRESH)
 
 def parse_args():
     """Parse input arguments."""
@@ -177,25 +200,26 @@ if __name__ == '__main__':
     matlab = matlab_wrapper.MatlabSession()
     print '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
 
-    for index in range(1,2,1):
+    for index in range(1,100,1):
         args.image_index = index
         if args.video_mode:
             image_filepath = os.path.join(cfg.ROOT_DIR, 'ear_recognition', 'data_file', 'video_frame.jpg')
-            flag = True
-            cap = cv2.VideoCapture(0)
-            while(flag):
-                ret, frame = cap.read()
-                if ret:
-                    cv2.imwrite(image_filepath, frame)
-                    flag = False
+            vc = cv2.VideoCapture(0)
+            if vc.isOpened():  # try to get the first frame
+                rval, frame = vc.read()
+            else:
+                rval = False
+
+            while rval:
+                rval, frame = vc.read()
+                cv2.imwrite(image_filepath, frame)
+                key = cv2.waitKey(20)
+                if key == 27:  # exit on ESC
+                    break
+                demo(net, image_filepath, ('ear',), args.video_mode)
         else:
             index_csv_path = os.path.join(cfg.ROOT_DIR, 'ear_recognition', 'data_file', 'image_index_list.csv')
             image_filepath = linecache.getline(index_csv_path, args.image_index).strip('\n')
             # print(image_filepath)
-            demo(net, image_filepath, ('ear',))
-
-    # print '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
-    # print 'Demo for data/demo/001551.jpg'
-    # demo(net, '001551', ('sofa', 'tvmonitor'))
-
-    plt.show()
+            demo(net, image_filepath, ('ear',), args.video_mode)
+            plt.show()

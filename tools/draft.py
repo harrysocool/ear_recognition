@@ -8,6 +8,7 @@ else:
     rval = False
 
 while rval:
+    cv2.rectangle(frame, (0, 0), (50, 50), (255, 0, 0), 2)
     cv2.imshow("preview", frame)
     rval, frame = vc.read()
     key = cv2.waitKey(20)

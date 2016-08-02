@@ -26,6 +26,13 @@ import cv2
 from sklearn import svm
 import os, sys
 
+NETS = {'vgg16': ('VGG16',
+                  'vgg16_fast_rcnn_iter_40000.caffemodel'),
+        'vgg_cnn_m_1024': ('VGG_CNN_M_1024',
+                           'vgg_cnn_m_1024_fast_rcnn_iter_40000.caffemodel'),
+        'caffenet': ('CaffeNet',
+                     'caffenet_fast_rcnn_iter_40000.caffemodel')}
+
 class SVMTrainer(object):
     """
     Trains post-hoc detection SVMs for all classes using the algorithm
@@ -319,6 +326,11 @@ if __name__ == '__main__':
     print('Called with args:')
     print(args)
 
+    prototxt = os.path.join(cfg.ROOT_DIR, 'models', NETS[args.caffemodel][0],
+                            'test.prototxt')
+    caffemodel = os.path.join(cfg.ROOT_DIR, 'output', 'default', 'soton_ear',
+                              NETS[args.caffemodel][1])
+
     if args.cfg_file is not None:
         cfg_from_file(args.cfg_file)
 
@@ -332,10 +344,10 @@ if __name__ == '__main__':
     caffe.set_mode_gpu()
     if args.gpu_id is not None:
         caffe.set_device(args.gpu_id)
-    net = caffe.Net(args.prototxt, args.caffemodel, caffe.TEST)
-    net.name = os.path.splitext(os.path.basename(args.caffemodel))[0]
-    out = os.path.splitext(os.path.basename(args.caffemodel))[0] + '_svm'
-    out_dir = os.path.dirname(args.caffemodel)
+    net = caffe.Net(prototxt, caffemodel, caffe.TEST)
+    net.name = os.path.splitext(os.path.basename(caffemodel))[0]
+    out = os.path.splitext(os.path.basename(caffemodel))[0] + '_svm'
+    out_dir = os.path.dirname(caffemodel)
 
     imdb = get_imdb(args.imdb_name)
     print 'Loaded dataset `{:s}` for training'.format(imdb.name)

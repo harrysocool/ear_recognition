@@ -25,6 +25,7 @@ import scipy.io as sio
 import caffe, os, sys, cv2
 import argparse
 
+count = 0
 CLASSES = ('__background__', 'ear')
 
 NETS = {'vgg16': ('VGG16',
@@ -117,6 +118,10 @@ def demo(net, image_filepath, classes):
                           cls_scores[:, np.newaxis])).astype(np.float32)
         keep = nms(dets, NMS_THRESH)
         dets = dets[keep, :]
+        if(len(dets)==0):
+            global count
+            count += 1
+            print('{} No Ear detected').format(count)
         print 'All {} detections with p({} | box) >= {:.1f}'.format(cls, cls,
                                                                     CONF_THRESH)
         vis_detections(im, cls, dets, thresh=CONF_THRESH)
@@ -145,7 +150,7 @@ if __name__ == '__main__':
 
     args.gpu_id = 0
     args.demo_net = 'caffenet'
-    args.image_index = index
+    args.video_mode = 1
 
     prototxt = os.path.join(cfg.ROOT_DIR, 'models', NETS[args.demo_net][0],
                             'test.prototxt')
@@ -166,21 +171,28 @@ if __name__ == '__main__':
 
     print '\nLoaded network {:s}'.format(caffemodel)
 
-    if args.video_mode:
-        image_filepath = os.path.join(cfg.ROOT_DIR, 'ear_recognition', 'data_file', 'video_frame.jpg')
-    else:
-        pass
-        index_csv_path = os.path.join(cfg.ROOT_DIR, 'ear_recognition', 'data_file', 'image_index_list.csv')
-        image_filepath = linecache.getline(index_csv_path, args.image_index-1).strip('\n')
-        print(image_filepath)
-
     # initialize the MATLAB server
     print '\nMATLAB Connected'
     import matlab_wrapper
     matlab = matlab_wrapper.MatlabSession()
-
     print '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
-    demo(net, image_filepath, ('ear',))
+
+    for index in range(1,2,1):
+        args.image_index = index
+        if args.video_mode:
+            image_filepath = os.path.join(cfg.ROOT_DIR, 'ear_recognition', 'data_file', 'video_frame.jpg')
+            flag = True
+            cap = cv2.VideoCapture(0)
+            while(flag):
+                ret, frame = cap.read()
+                if ret:
+                    cv2.imwrite(image_filepath, frame)
+                    flag = False
+        else:
+            index_csv_path = os.path.join(cfg.ROOT_DIR, 'ear_recognition', 'data_file', 'image_index_list.csv')
+            image_filepath = linecache.getline(index_csv_path, args.image_index).strip('\n')
+            # print(image_filepath)
+            demo(net, image_filepath, ('ear',))
 
     # print '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
     # print 'Demo for data/demo/001551.jpg'

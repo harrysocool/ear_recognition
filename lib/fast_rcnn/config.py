@@ -97,7 +97,7 @@ __C.TEST.NMS = 0.3
 
 # Experimental: treat the (K+1) units in the cls_score layer as linear
 # predictors (trained, eg, with one-vs-rest SVMs).
-__C.TEST.SVM = True
+__C.TEST.SVM = False
 
 # Test using bounding-box regressors
 __C.TEST.BBOX_REG = True

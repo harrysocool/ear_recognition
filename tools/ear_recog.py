@@ -13,7 +13,6 @@ Demo script showing detections in sample images.
 See README.md for installation instructions before running.
 """
 import linecache
-
 import _init_paths
 from lib.fast_rcnn.config import cfg
 from lib.fast_rcnn.test import im_detect
@@ -91,23 +90,25 @@ def visualise(im, class_name, dets, thresh=0.8):
 
 def ROI_boxes(image_filepath):
     # add the matlab directory path
-    # matlab.eval("cd('/home/harrysocool/Github/fast-rcnn/OP_methods/edges')")
-    # matlab.eval("addpath(genpath('/home/harrysocool/Github/fast-rcnn/OP_methods/edges'))")
-    # matlab.eval("toolboxCompile")
+    matlab.eval("cd('/home/harrysocool/Github/fast-rcnn/OP_methods/edges')")
+    matlab.eval("addpath(genpath('/home/harrysocool/Github/fast-rcnn/OP_methods/edges'))")
+    matlab.eval("toolboxCompile")
+    matlab.eval("res = edge_detector_demo('{}','{}',{},{})".format(image_filepath, 'EAR0.4_2',0.55, 0.75))
 
-        # selective_search OP_method
-    matlab.eval("cd('/home/harrysocool/Github/fast-rcnn/OP_methods/selective_search_ijcv_with_python')")
-    matlab.eval("addpath(genpath('/home/harrysocool/Github/fast-rcnn/OP_methods/selective_search_ijcv_with_python'))")
-    matlab.eval("res = selective_search_demo('{}')".format(image_filepath))
+    # # selective_search OP_method
+    # matlab.eval("cd('/home/harrysocool/Github/fast-rcnn/OP_methods/selective_search_ijcv_with_python')")
+    # matlab.eval("addpath(genpath('/home/harrysocool/Github/fast-rcnn/OP_methods/selective_search_ijcv_with_python'))")
+    # matlab.eval("res = selective_search_demo('{}')".format(image_filepath))
+
     raw_boxes = matlab.get('res')
     raw_boxes = np.asarray(raw_boxes)
 
-    correct_boxes = raw_boxes[:,(1, 0, 3, 2)] - 1
+    correct_boxes = raw_boxes
 
     return correct_boxes
 
 
-def demo(net, image_filepath, classes, video_mode):
+def demo(net, image_filepath, classes, args):
     """Detect object classes in an image using pre-computed object proposals."""
 
     # Load pre-computed Selected Search object proposals
@@ -142,11 +143,11 @@ def demo(net, image_filepath, classes, video_mode):
             global count
             count += 1
             print('{} No Ear detected').format(count)
-        print 'All {} detections with p({} | box) >= {:.1f}'.format(cls, cls,
-                                                                    CONF_THRESH)
-        if video_mode:
+        # print 'All {} detections with p({} | box) >= {:.1f}'.format(cls, cls,
+        #                                                             CONF_THRESH)
+        if args.video_mode:
             visualise(im, cls, dets, thresh=CONF_THRESH)
-        else:
+        elif args.image_path is not None:
             vis_detections(im, cls, dets, thresh=CONF_THRESH)
 
 def parse_args():
@@ -159,8 +160,8 @@ def parse_args():
                         action='store_true')
     parser.add_argument('--net', dest='demo_net', help='Network to use [vgg16]',
                         choices=NETS.keys(), default='vgg16')
-    parser.add_argument('--index', dest='image_index', help='the index number of datasets image',
-                        default=1, type=int)
+    parser.add_argument('--image', dest='image_path', help='the image path for detection',
+                        default=None, type=str)
     parser.add_argument('--video', dest='video_mode', 
     					help='Use video Frame or not(overides --image_index)',
                         action='store_true')
@@ -170,10 +171,10 @@ def parse_args():
 
 if __name__ == '__main__':
     args = parse_args()
-
-    args.gpu_id = 0
-    args.demo_net = 'caffenet'
-    args.video_mode = 1
+    #
+    # args.gpu_id = 0
+    # args.demo_net = 'caffenet'
+    # args.video_mode = 0
 
     prototxt = os.path.join(cfg.ROOT_DIR, 'models', NETS[args.demo_net][0],
                             'test.prototxt')
@@ -200,26 +201,31 @@ if __name__ == '__main__':
     matlab = matlab_wrapper.MatlabSession()
     print '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
 
-    for index in range(1,100,1):
-        args.image_index = index
-        if args.video_mode:
-            image_filepath = os.path.join(cfg.ROOT_DIR, 'ear_recognition', 'data_file', 'video_frame.jpg')
-            vc = cv2.VideoCapture(0)
-            if vc.isOpened():  # try to get the first frame
-                rval, frame = vc.read()
-            else:
-                rval = False
+    if args.image_path is None:
+        for index in range(1,548,1):
+            args.image_index = index
+            if args.video_mode:
+                image_filepath = os.path.join(cfg.ROOT_DIR, 'ear_recognition', 'data_file', 'video_frame.jpg')
+                vc = cv2.VideoCapture(0)
+                if vc.isOpened():  # try to get the first frame
+                    rval, frame = vc.read()
+                else:
+                    rval = False
 
-            while rval:
-                rval, frame = vc.read()
-                cv2.imwrite(image_filepath, frame)
-                key = cv2.waitKey(20)
-                if key == 27:  # exit on ESC
-                    break
+                while rval:
+                    rval, frame = vc.read()
+                    cv2.imwrite(image_filepath, frame)
+                    key = cv2.waitKey(20)
+                    if key == 27:  # exit on ESC
+                        break
+                    demo(net, image_filepath, ('ear',), args.video_mode)
+            else:
+                index_csv_path = os.path.join(cfg.ROOT_DIR, 'ear_recognition', 'data_file', 'image_index_list.csv')
+                image_filepath = linecache.getline(index_csv_path, args.image_index).strip('\n')
+                # print(image_filepath)
                 demo(net, image_filepath, ('ear',), args.video_mode)
-        else:
-            index_csv_path = os.path.join(cfg.ROOT_DIR, 'ear_recognition', 'data_file', 'image_index_list.csv')
-            image_filepath = linecache.getline(index_csv_path, args.image_index).strip('\n')
-            # print(image_filepath)
-            demo(net, image_filepath, ('ear',), args.video_mode)
-            plt.show()
+                # plt.show()
+    else:
+        image_filepath = args.image_path
+        demo(net, image_filepath, ('ear',), args)
+        plt.show()

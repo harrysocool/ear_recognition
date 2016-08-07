@@ -10,3 +10,7 @@
 	path = OP_methods/edges
 	url = https://github.com/harrysocool/edges.git
 	branch = master
+[submodule "BING-Objectness"]
+	path = OP_methods/BING-Objectness
+	url = https://github.com/harrysocool/BING-Objectness.git
+	branch = master

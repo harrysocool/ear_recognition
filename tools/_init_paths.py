@@ -25,3 +25,5 @@ add_path(caffe_path)
 # Add lib to PYTHONPATH
 lib_path = osp.join(parent_dir, 'lib')
 add_path(lib_path)
+OP_path = osp.join(parent_dir, 'OP_methods')
+add_path(OP_path)

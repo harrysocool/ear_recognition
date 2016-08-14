@@ -85,8 +85,6 @@ if __name__ == '__main__':
     matlab = initialize_matlab()
 
     list1 = pd.read_csv(image_index_output_path, header=None).values.flatten().tolist()
-    # list1 = listdir_no_hidden(image_path)
-
     cmd = 'edge_detector'
 
     # fnames_cell = "{" + ",".join("'{}'".format(x) for x in list1) + "}"

@@ -128,7 +128,9 @@ __C.EPS = 1e-14
 __C.ROOT_DIR = osp.abspath(osp.join(osp.dirname(__file__), '..', '..'))
 
 # Place outputs under an experiments directory
-__C.EXP_DIR = '20160807_BING800_train0.8'
+# __C.EXP_DIR = '20160807_BING800_train0.8'
+# __C.EXP_DIR = '20160808_EAR0.4.2_train0.8'
+__C.EXP_DIR = '20160809_SS_train0.8'
 
 def get_output_dir(imdb, net):
     """Return the directory where experimental artifacts are placed.

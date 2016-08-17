@@ -26,15 +26,42 @@ NETS = {'vgg16': ('VGG16',
 
 OP_method = ('ss','ed','BING')
 
-def transform_image(image_filepath, cmd, variable):
+def transform_image(image_index, cmd, variable=None):
+    gt_csv_path = os.path.join(cfg.ROOT_DIR, 'ear_recognition', 'data_file', 'test_gt_roidb.csv')
+    index_csv_path = os.path.join(cfg.ROOT_DIR, 'ear_recognition', 'data_file', 'test_image_index_list.csv')
+    image_filepath = linecache.getline(index_csv_path, image_index).strip('\n')
+
+    # craete the folder for transform iamge
+    datasets_path = '/home/harrysocool/Github/fast-rcnn/DatabaseEars/'
+    file_name = os.path.basename(image_filepath)
+    dir_path = os.path.join(datasets_path, cmd +'_'+ str(variable))
+    new_image_filepath = os.path.join(dir_path, file_name)
+    # check for the exsitence of folders
+    if not os.path.exists(dir_path):
+        os.mkdir(dir_path)
+    # check for the exsitence of files
+    elif os.path.exists(new_image_filepath):
+        return new_image_filepath
+
     im = cv2.imread(image_filepath)
     if cmd == 'noise':
         float_im = np.float64(im)
         noise = np.random.randn(im.shape)*variable
         noise_im = float_im + noise
         noisy = np.uint8(np.clip(noise_im, 0, 255))
-
-
+        cv2.imwrite(new_image_filepath, noisy)
+    elif cmd == 'occlude':
+        line = linecache.getline(gt_csv_path, image_index).strip('\n').split()
+        x1 = float(line[-4])
+        y1 = float(line[-3])
+        x2 = float(line[-2])
+        y2 = float(line[-1])
+        new_y2 = round(y1+(y2-y1) * variable)
+        mask = np.ones(im.shape[:2], np.uint8)
+        mask[y1:new_y2,x1:x2] = 0
+        new_im = cv2.bitwise_and(im, im, mask=mask)
+        cv2.imshow('sss', new_im)
+        cv2.imwrite(new_image_filepath, new_im)
     return new_image_filepath
 
 
@@ -95,3 +122,6 @@ def initialize():
     print '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
 
     return net, matlab
+
+if __name__ == '__main__':
+    transform_image(1, 'occlude', 0.1)

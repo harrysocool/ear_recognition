@@ -91,7 +91,7 @@ def visualise(im, class_name, dets, thresh=0.8):
 
 def ROI_boxes(matlab, image_filepath, cmd):
     if cmd == 'ed':
-        print('Using edge_detector OP_method')
+        # print('Using edge_detector OP_method')
         # add the matlab directory path
         matlab.eval("cd('/home/harrysocool/Github/fast-rcnn/OP_methods/edges')")
         matlab.eval("addpath(genpath('/home/harrysocool/Github/fast-rcnn/OP_methods/edges'))")
@@ -100,7 +100,7 @@ def ROI_boxes(matlab, image_filepath, cmd):
         raw_boxes = matlab.get('res')
         boxes = np.asarray(raw_boxes)
     elif cmd == 'ss':
-        print('Using selective_search OP_method')
+        # print('Using selective_search OP_method')
         # selective_search OP_method
         matlab.eval("cd('/home/harrysocool/Github/fast-rcnn/OP_methods/selective_search_ijcv_with_python')")
         matlab.eval("addpath(genpath('/home/harrysocool/Github/fast-rcnn/OP_methods/selective_search_ijcv_with_python'))")
@@ -108,7 +108,7 @@ def ROI_boxes(matlab, image_filepath, cmd):
         raw_boxes = matlab.get('res')
         boxes = np.asarray(raw_boxes)
     elif cmd == 'BING':
-        print('Using BING OP_method')
+        # print('Using BING OP_method')
         # BING method
         boxes, _ = bing_demo(image_filepath)
     else:

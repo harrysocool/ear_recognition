@@ -1,3 +1,4 @@
+import csv
 import linecache
 import _init_paths
 from lib.fast_rcnn.config import cfg
@@ -27,6 +28,7 @@ NETS = {'vgg16': ('VGG16',
 OP_method = ('ss','ed','BING')
 
 def transform_image(image_index, cmd, variable=None):
+    assert variable!=None, 'No variable input, needs more variable input'
     gt_csv_path = os.path.join(cfg.ROOT_DIR, 'ear_recognition', 'data_file', 'test_gt_roidb.csv')
     index_csv_path = os.path.join(cfg.ROOT_DIR, 'ear_recognition', 'data_file', 'test_image_index_list.csv')
     image_filepath = linecache.getline(index_csv_path, image_index).strip('\n')
@@ -60,7 +62,7 @@ def transform_image(image_index, cmd, variable=None):
         mask = np.ones(im.shape[:2], np.uint8)
         mask[y1:new_y2,x1:x2] = 0
         new_im = cv2.bitwise_and(im, im, mask=mask)
-        cv2.imshow('sss', new_im)
+        # cv2.imshow('sss', new_im)
         cv2.imwrite(new_image_filepath, new_im)
     return new_image_filepath
 
@@ -91,24 +93,27 @@ def demo(net, matlab, image_filepath, classes, method):
                           cls_scores[:, np.newaxis])).astype(np.float32)
         keep = nms(dets, NMS_THRESH)
         dets = dets[keep, :]
-        if(len(dets)==0):
-            global false_count
-            false_count += 1
-            print('{:d}/{:d} fail detect by {:s} OP_method at {:.3f} seconds').format(false_count,
-                                                                                         method, timer.total_time)
-        else:
-            print('{:d}/{:d} fail detect by {:s} OP_method at {:.3f} seconds').format(false_count,
-                                                                                         method, timer.total_time)
-        global count
+        global false_count, count
         count += 1
+        if (len(dets) == 0):
+            false_count += 1
+        print('{:d}/{:d} fail detect by {:s} OP_method at {:.3f} seconds').format(false_count, count,
+                                                                                         method, timer.total_time)
 
 
-def initialize():
-
+def initialize(cmd):
+    if cmd is 'ss':
+        model_dirname = '20160809_SS_train0.8'
+    elif cmd is 'ed':
+        model_dirname = '20160808_EAR0.4.2_train0.8'
+    elif cmd is 'BING':
+        model_dirname = '20160807_BING800_train0.8'
+    else:
+        raise IOError('Wrong cmd name, choose from ss, ed, BING')
     # configuration for the caffe net
     prototxt = os.path.join(cfg.ROOT_DIR, 'models', NETS['caffenet'][0],
                             'test.prototxt')
-    caffemodel = os.path.join(cfg.ROOT_DIR, 'output', cfg.EXP_DIR , 'soton_ear',
+    caffemodel = os.path.join(cfg.ROOT_DIR, 'output', model_dirname , 'soton_ear',
                               NETS['caffenet'][1])
     caffe.set_mode_gpu()
     caffe.set_device(0)
@@ -124,4 +129,14 @@ def initialize():
     return net, matlab
 
 if __name__ == '__main__':
-    transform_image(1, 'occlude', 0.1)
+    cmd = 'ss'
+    net, matlab = initialize(cmd)
+    index_csv_path = os.path.join(cfg.ROOT_DIR, 'ear_recognition', 'data_file', 'test_image_index_list.csv')
+    with open(index_csv_path, 'rb') as mycsvfile:
+        image_list = csv.reader(mycsvfile)
+        for index, item in enumerate(image_list):
+            image_filepath = str(item[0])
+            image_filepath = transform_image(index+1, 'occlude', 0.5)
+            demo(net, matlab, image_filepath, ('ear',), cmd)
+    print('Total {} images {} fails'.format(count, false_count))
+    # transform_image(1, 'occlude', 0.1)

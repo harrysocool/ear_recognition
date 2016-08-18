@@ -55,7 +55,7 @@ def vis_detections(im, class_name, dets, thresh=0.8):
                           bbox[2] - bbox[0],
                           bbox[3] - bbox[1], fill=False,
                           edgecolor='red', linewidth=3.5)
-            )
+        )
         ax.text(bbox[0], bbox[1] - 2,
                 '{:s} {:.3f}'.format(class_name, score),
                 bbox=dict(facecolor='blue', alpha=0.5),
@@ -64,10 +64,11 @@ def vis_detections(im, class_name, dets, thresh=0.8):
     ax.set_title(('{} detections with '
                   'p({} | box) >= {:.1f}').format(class_name, class_name,
                                                   thresh),
-                  fontsize=14)
+                 fontsize=14)
     plt.axis('off')
     plt.tight_layout()
     plt.draw()
+
 
 def visualise(im, class_name, dets, thresh=0.8):
     """Draw detected bounding boxes."""
@@ -81,34 +82,35 @@ def visualise(im, class_name, dets, thresh=0.8):
         bbox = dets[i, :4]
         score = dets[i, -1]
 
-        cv2.rectangle(im,(bbox[0], bbox[1]), (bbox[2], bbox[3]), (0, 255, 0), 2)
+        cv2.rectangle(im, (bbox[0], bbox[1]), (bbox[2], bbox[3]), (0, 255, 0), 2)
         font = cv2.FONT_HERSHEY_SIMPLEX
         cv2.putText(im, '{:s} {:.3f}'.format(class_name, score),
-                    (int(bbox[0]), int(bbox[1] - 2)), font, 1, (0,255,0), 1)
+                    (int(bbox[0]), int(bbox[1] - 2)), font, 1, (0, 255, 0), 1)
     cv2.imshow('{} detections with p({} | box) >= {:.1f}'.format(
         class_name, class_name, thresh), im)
 
 
 def ROI_boxes(matlab, image_filepath, cmd):
     if cmd == 'ed':
-        # print('Using edge_detector OP_method')
+        print('Using edge_detector OP_method')
         # add the matlab directory path
         matlab.eval("cd('/home/harrysocool/Github/fast-rcnn/OP_methods/edges')")
         matlab.eval("addpath(genpath('/home/harrysocool/Github/fast-rcnn/OP_methods/edges'))")
         matlab.eval("toolboxCompile")
-        matlab.eval("res = edge_detector_demo('{}','{}',{},{})".format(image_filepath, 'EAR0.4_2',0.55, 0.75))
+        matlab.eval("res = edge_detector_demo('{}','{}',{},{})".format(image_filepath, 'EAR0.4_2', 0.55, 0.75))
         raw_boxes = matlab.get('res')
         boxes = np.asarray(raw_boxes)
     elif cmd == 'ss':
-        # print('Using selective_search OP_method')
+        print('Using selective_search OP_method')
         # selective_search OP_method
         matlab.eval("cd('/home/harrysocool/Github/fast-rcnn/OP_methods/selective_search_ijcv_with_python')")
-        matlab.eval("addpath(genpath('/home/harrysocool/Github/fast-rcnn/OP_methods/selective_search_ijcv_with_python'))")
+        matlab.eval(
+            "addpath(genpath('/home/harrysocool/Github/fast-rcnn/OP_methods/selective_search_ijcv_with_python'))")
         matlab.eval("res = selective_search_demo('{}')".format(image_filepath))
         raw_boxes = matlab.get('res')
         boxes = np.asarray(raw_boxes)
     elif cmd == 'BING':
-        # print('Using BING OP_method')
+        print('Using BING OP_method')
         # BING method
         boxes, _ = bing_demo(image_filepath)
     else:
@@ -139,7 +141,7 @@ def demo(net, matlab, image_filepath, classes, args):
     NMS_THRESH = 0.3
     for cls in classes:
         cls_ind = CLASSES.index(cls)
-        cls_boxes = boxes[:, 4*cls_ind:4*(cls_ind + 1)]
+        cls_boxes = boxes[:, 4 * cls_ind:4 * (cls_ind + 1)]
         cls_scores = scores[:, cls_ind]
         keep = np.where(cls_scores >= CONF_THRESH)[0]
         cls_boxes = cls_boxes[keep, :]
@@ -148,7 +150,7 @@ def demo(net, matlab, image_filepath, classes, args):
                           cls_scores[:, np.newaxis])).astype(np.float32)
         keep = nms(dets, NMS_THRESH)
         dets = dets[keep, :]
-        if(len(dets)==0):
+        if (len(dets) == 0):
             global count
             count += 1
             print('{} No Ear detected').format(count)
@@ -158,6 +160,7 @@ def demo(net, matlab, image_filepath, classes, args):
             visualise(im, cls, dets, thresh=CONF_THRESH)
         elif args.image_path is not None:
             vis_detections(im, cls, dets, thresh=CONF_THRESH)
+
 
 def parse_args():
     """Parse input arguments."""
@@ -171,8 +174,8 @@ def parse_args():
                         choices=NETS.keys(), default='vgg16')
     parser.add_argument('--image', dest='image_path', help='the image path for detection',
                         default=None, type=str)
-    parser.add_argument('--video', dest='video_mode', 
-    					help='Use video Frame or not(overides --image_index)',
+    parser.add_argument('--video', dest='video_mode',
+                        help='Use video Frame or not(overides --image_index)',
                         action='store_true')
     parser.add_argument('--method', dest='OP_method', help='the ROI Object proposal method',
                         default=None, type=str)
@@ -180,16 +183,24 @@ def parse_args():
 
     return args
 
+
 if __name__ == '__main__':
     args = parse_args()
     #
-    # args.gpu_id = 0
-    # args.demo_net = 'caffenet'
-    # args.video_mode = 0
+    cmd = args.OP_method
+
+    if cmd == 'ss':
+        model_dirname = '20160809_SS_train0.8'
+    elif cmd == 'ed':
+        model_dirname = '20160808_EAR0.4.2_train0.8'
+    elif cmd == 'BING':
+        model_dirname = '20160807_BING800_train0.8'
+    else:
+        raise IOError('Wrong cmd name, choose from ss, ed, BING')
 
     prototxt = os.path.join(cfg.ROOT_DIR, 'models', NETS[args.demo_net][0],
                             'test.prototxt')
-    caffemodel = os.path.join(cfg.ROOT_DIR, 'output', cfg.EXP_DIR , 'soton_ear',
+    caffemodel = os.path.join(cfg.ROOT_DIR, 'output', model_dirname, 'soton_ear',
                               NETS[args.demo_net][1])
 
     if not os.path.isfile(caffemodel):
@@ -209,11 +220,12 @@ if __name__ == '__main__':
     # initialize the MATLAB server
     print '\nMATLAB Connected'
     import matlab_wrapper
+
     matlab = matlab_wrapper.MatlabSession()
     print '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
 
     if args.image_path is None:
-        for index in range(1,548,1):
+        for index in range(1, 548, 1):
             args.image_index = index
             if args.video_mode:
                 image_filepath = os.path.join(cfg.ROOT_DIR, 'ear_recognition', 'data_file', 'video_frame.jpg')

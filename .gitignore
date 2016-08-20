@@ -1,10 +1,10 @@
 *.jpg
 *.mat
-*.csv
 *.pyc
 .ipynb_checkpoints
 utils/*.c
 utils/*.so
+
 #dataset
 /DatabaseEars
 /db_252_ears

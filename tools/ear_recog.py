@@ -246,36 +246,29 @@ def save_result(list1, image_filepath, cmd, transform, variable):
 
 
 if __name__ == '__main__':
-    # cmd = 'BING'
-    # transform = 'noise'
-    # variable = 0
-    OP_method = ('ed','ss')
-    transform = ('noise', 'occlude')
-    variable_prod = ((5,10,15,20,25,30),(0.1,0.2,0.3,0.4,0.5))
+    OP_method = ('ed','ss', 'BING')
+    transform_prod = ('noise', 'occlude')
+    variable_prod = ((0,5,10,15,20,25,30),(0.1,0.2,0.3,0.4,0.5))
 
-    for index2, transform in enumerate(transform):
-        variable1 = variable_prod[index2]
-        for variable in variable1:
-            cmd_class = []
-            for cmd in OP_method:
-                temp = cmd_result(cmd)
-                cmd_class.append(temp)
-            index_csv_path = os.path.join(cfg.ROOT_DIR,
-                                          'ear_recognition', 'data_file', 'test_image_index_list.csv')
+    cmd = OP_method[2]
+    transform = transform_prod[1]
+    variable = variable_prod[1][4]
 
-            for index1, cmd in enumerate(OP_method):
-                net, matlab = initialize(cmd)
-                object1 = cmd_class[index1]
+    index_csv_path = os.path.join(cfg.ROOT_DIR,
+                                  'ear_recognition', 'data_file', 'test_image_index_list.csv')
 
-                with open(index_csv_path, 'rb') as mycsvfile:
-                    image_list = csv.reader(mycsvfile)
-                    for index, item in enumerate(image_list):
-                        image_filepath = str(item[0])
-                        image_filepath = transform_image(index + 1, transform, variable)
+    net, matlab = initialize(cmd)
+    object1 = cmd_result(cmd)
 
-                        dets, time = demo(net, matlab, image_filepath, ('ear',), cmd)
-                        result(object1, dets, index + 1, image_filepath, cmd, time)
+    with open(index_csv_path, 'rb') as mycsvfile:
+        image_list = csv.reader(mycsvfile)
+        for index, item in enumerate(image_list):
+            image_filepath = str(item[0])
+            image_filepath = transform_image(index + 1, transform, variable)
 
-                object1.gather()
-                save_result(object1.true_ratio, image_filepath, cmd, transform, variable)
+            dets, time = demo(net, matlab, image_filepath, ('ear',), cmd)
+            result(object1, dets, index + 1, image_filepath, cmd, time)
+
+    object1.gather()
+    save_result(object1.true_ratio, image_filepath, cmd, transform, variable)
 

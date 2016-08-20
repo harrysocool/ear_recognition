@@ -5,16 +5,13 @@ from lib.fast_rcnn.config import cfg
 from lib.fast_rcnn.test import im_detect
 from lib.utils.nms import nms
 from lib.utils.timer import Timer
-import matplotlib.pyplot as plt
 import numpy as np
 import scipy.io as sio
 import caffe, os, sys, cv2
-import argparse
+import pandas as pd
 from OP_methods.BING_Objectness.source.bing_demo import bing_demo
 
-count = 0
-false_count = 0
-false_positive_count = 0
+OP_num = 0
 CLASSES = ('__background__', 'ear')
 
 NETS = {'vgg16': ('VGG16',
@@ -24,7 +21,20 @@ NETS = {'vgg16': ('VGG16',
         'caffenet': ('CaffeNet',
                      'caffenet_fast_rcnn_iter_40000.caffemodel')}
 
-OP_method = ('ss', 'ed', 'BING')
+
+
+class cmd_result(object):
+    def __init__(self, cmd):
+        self.cmd = cmd
+        self.count = 0
+        self.false_count = 0
+        self.false_positive_count = 0
+        self.true_ratio = []
+
+    def gather(self):
+        self.true_ratio.append(['Total pictures', self.count])
+        self.true_ratio.append(['True negative', self.false_count])
+        self.true_ratio.append(['False positive', self.false_positive_count])
 
 
 def IOU_ratio(image_index, dets):
@@ -35,11 +45,19 @@ def IOU_ratio(image_index, dets):
         Y1 = box[1]
         X2 = box[2]
         Y2 = box[3]
-        SI = max(0, min(x2, X2) - max(x1, X1)) *\
-             max(0, min(y2, Y2) - max(y1, Y1))
-        SU = (x2-x1)*(y2-y1) + (X2-X1)*(Y2-Y1)  - SI
-        ratio.append(SI/SU)
-    return ratio
+        if (X1 <= np.float32(x1) and X2 >= np.float32(x2)
+            and Y1 <= np.float32(y1) and Y2 >= np.float32(y2)):
+            ratio.append(1.0)
+        else:
+            SI = max(0, min(x2, X2) - max(x1, X1)) * \
+                 max(0, min(y2, Y2) - max(y1, Y1))
+            SU = (x2 - x1) * (y2 - y1) + (X2 - X1) * (Y2 - Y1) - SI
+            ratio.append(SI / SU)
+    if len(ratio) == 0:
+        max_ratio = 0
+    else:
+        max_ratio = max(ratio)
+    return max_ratio
 
 
 def get_gt(image_index):
@@ -83,6 +101,8 @@ def transform_image(image_index, cmd, variable=None):
     index_csv_path = os.path.join(cfg.ROOT_DIR, 'ear_recognition', 'data_file', 'test_image_index_list.csv')
     image_filepath = linecache.getline(index_csv_path, image_index).strip('\n')
 
+    if variable == 0:
+        return image_filepath
     # craete the folder for transform iamge
     datasets_path = '/home/harrysocool/Github/fast-rcnn/DatabaseEars/'
     file_name = os.path.basename(image_filepath)
@@ -97,10 +117,10 @@ def transform_image(image_index, cmd, variable=None):
 
     im = cv2.imread(image_filepath)
     if cmd == 'noise':
-        float_im = np.float64(im)
-        noise = np.random.randn(im.shape) * variable
-        noise_im = float_im + noise
-        noisy = np.uint8(np.clip(noise_im, 0, 255))
+        gauss = np.random.normal(0, variable, im.shape)
+        gauss = gauss.reshape(im.shape)
+        noisy = im + gauss
+
         cv2.imwrite(new_image_filepath, noisy)
     elif cmd == 'occlude':
         (x1, y1, x2, y2) = get_gt(image_index)
@@ -119,6 +139,12 @@ def demo(net, matlab, image_filepath, classes, method):
     timer.tic()
     # Load pre-computed Selected Search object proposals
     obj_proposals = ROI_boxes(matlab, image_filepath, method)
+    global OP_num
+    OP_num = len(obj_proposals)
+    if len(obj_proposals)==0:
+        dets = []
+        timer.toc()
+        return dets, timer.total_time
 
     # Load the demo image
     im = cv2.imread(image_filepath)
@@ -170,7 +196,7 @@ def initialize(cmd):
     return net, matlab
 
 
-def visualise(image_index,image_filepath, dets,ratio):
+def visualise(image_index, image_filepath, dets, ratio):
     """Draw detected bounding boxes."""
     (x1, y1, x2, y2) = get_gt(image_index)
     im = cv2.imread(image_filepath)
@@ -178,42 +204,78 @@ def visualise(image_index,image_filepath, dets,ratio):
     if len(dets) == 0:
         cv2.rectangle(im, (x1, y1), (x2, y2), (0, 255, 0), 2)
         font = cv2.FONT_HERSHEY_SIMPLEX
-        cv2.putText(im, 'Fail to detec ear in this image',
+        cv2.putText(im, 'Fail to detect ear in this image',
                     (50, 50), font, 0.5, (0, 0, 255), 1)
-        cv2.imshow('frame',im)
+        cv2.imshow('frame', im)
         cv2.waitKey(10)
         return
     for bbox in dets:
-        cv2.rectangle(im, (x1, y1),(x2,y2),(0,255,0),2)
+        cv2.rectangle(im, (x1, y1), (x2, y2), (0, 255, 0), 2)
         cv2.rectangle(im, (bbox[0], bbox[1]), (bbox[2], bbox[3]), (0, 0, 255), 2)
         font = cv2.FONT_HERSHEY_SIMPLEX
-        cv2.putText(im, 'IOU ratio {:.3f}'.format(max(ratio)),
+        cv2.putText(im, 'IOU ratio {:.3f}'.format(ratio),
                     (int(bbox[0]), int(bbox[1] - 10)), font, 0.5, (0, 0, 255), 1)
     cv2.imshow('frame', im)
     cv2.waitKey(10)
 
-def result(dets, image_index,image_filepath, method, time):
+
+def result(object1, dets, image_index, image_filepath, method, time):
+
     ratio = IOU_ratio(image_index, dets)
-    visualise(image_index,image_filepath,dets,ratio)
-    global false_count, count, false_positive_count
-    count += 1
+
+    # visualise(image_index, image_filepath, dets, ratio)
+
+    object1.count += 1
     if (len(dets) == 0):
-        false_count += 1
-    elif (max(ratio) <= 0.5):
-        false_positive_count +=1
-    print('{:d}/{:d}/{:d} fail/total/FP detect by {:s} OP_method at {:.3f} seconds').\
-        format(false_count, count, false_positive_count, method, time)
+        object1.false_count += 1
+    elif (ratio <= 0.5):
+        object1.false_positive_count += 1
+    else:
+        object1.true_ratio.append(ratio)
+    print('{:d}/{:d}/{:d} fail/total/FP detect by {:s} OP_method at {:.3f} seconds, {} OP boxes'). \
+        format(object1.false_count, object1.count, object1.false_positive_count, method, time, OP_num)
+
+
+def save_result(list1, image_filepath, cmd, transform, variable):
+    dir_path = os.path.dirname(image_filepath)
+    dir_path1 = os.path.dirname(dir_path)
+    csv_file_name = os.path.join(dir_path1,'result',
+                                 cmd + '_' + transform +'_'+str(variable)+'.csv')
+    temp = pd.DataFrame(list1)
+    temp.to_csv(csv_file_name, index=False, header=False)
+
 
 if __name__ == '__main__':
-    cmd = 'ed'
-    net, matlab = initialize(cmd)
-    index_csv_path = os.path.join(cfg.ROOT_DIR, 'ear_recognition', 'data_file', 'test_image_index_list.csv')
-    with open(index_csv_path, 'rb') as mycsvfile:
-        image_list = csv.reader(mycsvfile)
-        for index, item in enumerate(image_list):
-            image_filepath = str(item[0])
-            # image_filepath = transform_image(index + 1, 'occlude', 0.5)
-            dets, time = demo(net, matlab, image_filepath, ('ear',), cmd)
-            result(dets, index+1, image_filepath, cmd, time)
-    print('Total {} images {} fails'.format(count, false_count))
-    # transform_image(1, 'occlude', 0.1)
+    # cmd = 'BING'
+    # transform = 'noise'
+    # variable = 0
+    OP_method = ('ed','ss')
+    transform = ('noise', 'occlude')
+    variable_prod = ((5,10,15,20,25,30),(0.1,0.2,0.3,0.4,0.5))
+
+    for index2, transform in enumerate(transform):
+        variable1 = variable_prod[index2]
+        for variable in variable1:
+            cmd_class = []
+            for cmd in OP_method:
+                temp = cmd_result(cmd)
+                cmd_class.append(temp)
+            index_csv_path = os.path.join(cfg.ROOT_DIR,
+                                          'ear_recognition', 'data_file', 'test_image_index_list.csv')
+
+            for index1, cmd in enumerate(OP_method):
+                net, matlab = initialize(cmd)
+                object1 = cmd_class[index1]
+
+                with open(index_csv_path, 'rb') as mycsvfile:
+                    image_list = csv.reader(mycsvfile)
+                    for index, item in enumerate(image_list):
+                        image_filepath = str(item[0])
+                        image_filepath = transform_image(index + 1, transform, variable)
+
+                        dets, time = demo(net, matlab, image_filepath, ('ear',), cmd)
+                        result(object1, dets, index + 1, image_filepath, cmd, time)
+
+                object1.gather()
+                save_result(object1.true_ratio, image_filepath, cmd, transform, variable)
+

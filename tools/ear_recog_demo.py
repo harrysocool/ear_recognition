@@ -121,7 +121,8 @@ def ROI_boxes(matlab, image_filepath, cmd):
 
 def demo(net, matlab, image_filepath, classes, args):
     """Detect object classes in an image using pre-computed object proposals."""
-
+    timer = Timer()
+    timer.tic()
     # Load pre-computed Selected Search object proposals
     obj_proposals = ROI_boxes(matlab, image_filepath, args.OP_method)
 
@@ -129,8 +130,7 @@ def demo(net, matlab, image_filepath, classes, args):
     im = cv2.imread(image_filepath)
 
     # Detect all object classes and regress object bounds
-    timer = Timer()
-    timer.tic()
+
     scores, boxes = im_detect(net, im, obj_proposals)
     timer.toc()
     print ('Detection took {:.3f}s for '

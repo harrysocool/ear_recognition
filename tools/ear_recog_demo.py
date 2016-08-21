@@ -96,7 +96,7 @@ def ROI_boxes(matlab, image_filepath, cmd):
         # add the matlab directory path
         matlab.eval("cd('/home/harrysocool/Github/fast-rcnn/OP_methods/edges')")
         matlab.eval("addpath(genpath('/home/harrysocool/Github/fast-rcnn/OP_methods/edges'))")
-        matlab.eval("toolboxCompile")
+        # matlab.eval("toolboxCompile")
         matlab.eval("res = edge_detector_demo('{}','{}',{},{})".format(image_filepath, 'EAR0.4_2', 0.55, 0.75))
         raw_boxes = matlab.get('res')
         boxes = np.asarray(raw_boxes)

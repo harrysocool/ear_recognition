@@ -3,6 +3,8 @@ import random
 import numpy as np
 import pandas as pd
 import matlab_wrapper
+from tools.ear_recog import ROI_boxes
+from lib.utils.timer import Timer
 
 
 def listdir_no_hidden(path):
@@ -68,8 +70,20 @@ def initialize_matlab():
 
     return matlab
 
+def time_analyse(matlab, cmd, image_filepath):
+    timer = Timer()
+    timer.tic()
+
+    obj_proposals = ROI_boxes(matlab, image_filepath, cmd)
+
+    timer.toc()
+    time = timer.total_time
+    box_numer = len(obj_proposals)
+
+    return time, box_numer
+
 if __name__ == '__main__':
-    datasets_path = '/home/harrysocool/Github/fast-rcnn/DatabaseEars/'
+    datasets_path = '/home/harrysocool/Github/fast-rcnn/DatabaseEars'
     csv_path = os.path.join(datasets_path, 'boundaries.csv')
     image_path = os.path.join(datasets_path, 'DatabaseEars/')
     gt_output_path = os.path.join(datasets_path, '../','ear_recognition/data_file/gt_roidb.csv')
@@ -85,15 +99,26 @@ if __name__ == '__main__':
     matlab = initialize_matlab()
 
     list1 = pd.read_csv(image_index_output_path, header=None).values.flatten().tolist()
-    cmd = 'edge_detector'
+    cmd = 'BING'
 
-    # fnames_cell = "{" + ",".join("'{}'".format(x) for x in list1) + "}"
-    fnames_cell = "{"
-    for x in list1:
-        fnames_cell += "'" + x+ "',"
-    fnames_cell += "}"
-    # fnames_cell = "{'"+list1[0]+"','"+list1[1] +"'}"
-    command = "res = {}({}, '{}')".format(cmd, fnames_cell, mat_output_filename)
-    print(command)
+    list2 = []
+    for index, image_path in enumerate(list1):
+        if index>300:
+            break
+        time, box_numer = time_analyse(matlab, cmd, image_path)
+        list2.append([time, box_numer])
+        print('{} has processed in {:.3f} seconds with {} boxes'.format(len(list2), time, box_numer))
 
-    matlab.eval(command)
+    time_csv_out_path = os.path.join(os.path.dirname(datasets_path), 'result',cmd+'_'+'time_result.csv')
+    write_list_to_csv(list2, time_csv_out_path)
+
+    # # fnames_cell = "{" + ",".join("'{}'".format(x) for x in list1) + "}"
+    # fnames_cell = "{"
+    # for x in list1:
+    #     fnames_cell += "'" + x+ "',"
+    # fnames_cell += "}"
+    # # fnames_cell = "{'"+list1[0]+"','"+list1[1] +"'}"
+    # command = "res = {}({}, '{}')".format(cmd, fnames_cell, mat_output_filename)
+    # print(command)
+    #
+    # matlab.eval(command)

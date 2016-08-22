@@ -15,6 +15,10 @@ import argparse
 import numpy as np
 import os, sys
 
+from lib.fast_rcnn.config import cfg
+from tools.ear_recog import NETS
+
+
 def parse_args():
     """Parse input arguments."""
     parser = argparse.ArgumentParser(description='Compress a Fast R-CNN network')
@@ -30,9 +34,9 @@ def parse_args():
                         help='model to compress',
                         default=None, type=str)
 
-    if len(sys.argv) == 1:
-        parser.print_help()
-        sys.exit(1)
+    # if len(sys.argv) == 1:
+    #     parser.print_help()
+    #     sys.exit(1)
 
     args = parser.parse_args()
     return args
@@ -60,8 +64,23 @@ def compress_weights(W, l):
     L = np.dot(np.diag(sl), Vl)
     return Ul, L
 
-def main():
+def main(cmd):
     args = parse_args()
+
+    args.prototxt_svd = os.path.join(cfg.ROOT_DIR, 'models/CaffeNet/compressed/test.prototxt')
+    args.prototxt = os.path.join(cfg.ROOT_DIR, 'models/CaffeNet/test.prototxt')
+
+    if cmd == 'ss':
+        model_dirname = '20160809_SS_train0.8'
+    elif cmd == 'ed':
+        model_dirname = '20160808_EAR0.4.2_train0.8'
+    elif cmd == 'BING':
+        model_dirname = '20160807_BING800_train0.8'
+    else:
+        raise IOError('Wrong cmd name, choose from ss, ed, BING')
+
+    args.caffemodel =  os.path.join(cfg.ROOT_DIR, 'output', model_dirname, 'soton_ear',
+                              NETS['caffenet'][1])
 
     net = caffe.Net(args.prototxt, args.caffemodel, caffe.TEST)
 
@@ -120,4 +139,4 @@ def main():
     print 'Wrote svd model to: {:s}'.format(filename)
 
 if __name__ == '__main__':
-    main()
+    main('BING')

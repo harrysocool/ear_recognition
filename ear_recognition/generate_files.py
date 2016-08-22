@@ -98,7 +98,7 @@ if __name__ == '__main__':
 
     matlab = initialize_matlab()
 
-    list1 = pd.read_csv(image_index_output_path, header=None).values.flatten().tolist()
+    list1 = pd.read_csv(test_gt_output_path, header=None).values.flatten().tolist()
     cmd = 'BING'
 
     list2 = []

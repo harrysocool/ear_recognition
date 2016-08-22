@@ -19,7 +19,8 @@ NETS = {'vgg16': ('VGG16',
         'vgg_cnn_m_1024': ('VGG_CNN_M_1024',
                            'vgg_cnn_m_1024_fast_rcnn_iter_40000.caffemodel'),
         'caffenet': ('CaffeNet',
-                     'caffenet_fast_rcnn_iter_40000.caffemodel')}
+                     'caffenet_fast_rcnn_iter_40000.caffemodel',
+                     'caffenet_fast_rcnn_iter_40000_svd_fc6_1024_fc7_256.caffemodel')}
 
 
 
@@ -168,7 +169,7 @@ def demo(net, matlab, image_filepath, classes, method):
     return dets, timer.total_time
 
 
-def initialize(cmd):
+def initialize(cmd, cm):
     if cmd == 'ss':
         model_dirname = '20160809_SS_train0.8'
     elif cmd == 'ed':
@@ -181,7 +182,7 @@ def initialize(cmd):
     prototxt = os.path.join(cfg.ROOT_DIR, 'models', NETS['caffenet'][0],
                             'test.prototxt')
     caffemodel = os.path.join(cfg.ROOT_DIR, 'output', model_dirname, 'soton_ear',
-                              NETS['caffenet'][1])
+                              NETS['caffenet'][cm])
     caffe.set_mode_gpu()
     caffe.set_device(0)
     net = caffe.Net(prototxt, caffemodel, caffe.TEST)
@@ -246,29 +247,31 @@ def save_result(list1, image_filepath, cmd, transform, variable):
 
 
 if __name__ == '__main__':
+    # model_index (1 for caffemodel, 2 for svd_caffemodel_compressed)
+    model_index = 1
     OP_method = ('ed','ss', 'BING')
     transform_prod = ('noise', 'occlude')
     variable_prod = ((0,5,10,15,20,25,30),(0.1,0.2,0.3,0.4,0.5))
 
-    cmd = OP_method[2]
+    cmd = OP_method[1]
     transform = transform_prod[1]
     variable = variable_prod[1][4]
 
     index_csv_path = os.path.join(cfg.ROOT_DIR,
                                   'ear_recognition', 'data_file', 'test_image_index_list.csv')
 
-    net, matlab = initialize(cmd)
+    net, matlab = initialize(cmd, model_index)
     object1 = cmd_result(cmd)
 
     with open(index_csv_path, 'rb') as mycsvfile:
         image_list = csv.reader(mycsvfile)
         for index, item in enumerate(image_list):
             image_filepath = str(item[0])
-            image_filepath = transform_image(index + 1, transform, variable)
+            # image_filepath = transform_image(index + 1, transform, variable)
 
             dets, time = demo(net, matlab, image_filepath, ('ear',), cmd)
             result(object1, dets, index + 1, image_filepath, cmd, time)
 
     object1.gather()
-    save_result(object1.true_ratio, image_filepath, cmd, transform, variable)
+    # save_result(object1.true_ratio, image_filepath, cmd, transform, variable)
 

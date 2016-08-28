@@ -1,10 +1,11 @@
+import csv
 import os
 import random
 import numpy as np
 import pandas as pd
 import matlab_wrapper
-from tools.ear_recog import ROI_boxes
 from lib.utils.timer import Timer
+from tools.ear_recog import get_gt, ROI_boxes
 
 
 def listdir_no_hidden(path):
@@ -70,17 +71,41 @@ def initialize_matlab():
 
     return matlab
 
-def time_analyse(matlab, cmd, image_filepath):
+def time_analyse(matlab, cmd, image_filepath, par1, par2):
     timer = Timer()
     timer.tic()
 
-    obj_proposals = ROI_boxes(matlab, image_filepath, cmd)
+    obj_proposals = ROI_boxes(matlab, image_filepath, cmd, par1, par2)
 
     timer.toc()
     time = timer.total_time
     box_numer = len(obj_proposals)
 
-    return time, box_numer
+    return time, box_numer, obj_proposals
+
+def mean_IOU_ratio(image_index, dets):
+    ratio = np.empty(0,dtype=np.float64)
+    (x1, y1, x2, y2) = get_gt(image_index)
+    for box in dets:
+        X1 = box[0]
+        Y1 = box[1]
+        X2 = box[2]
+        Y2 = box[3]
+        if ((np.float32(x1)-X1)<=15 and (X2- np.float32(x2))<=15
+            and (np.float32(y1)-Y1)<=15 and (Y2-np.float32(y2))<=15):
+            ratio = np.append(ratio,1.0)
+        else:
+            SI = max(0, min(x2, X2) - max(x1, X1)) * \
+                 max(0, min(y2, Y2) - max(y1, Y1))
+            SU = (x2 - x1) * (y2 - y1) + (X2 - X1) * (Y2 - Y1) - SI
+            ratio = np.append(ratio, SI/SU)
+    if ratio.size == 0:
+        big_ratio = 0
+    else:
+        big = np.where(ratio >= 0.1)[0].size
+        total = float(len(dets))
+        big_ratio = float(big/total)
+    return big_ratio
 
 if __name__ == '__main__':
     datasets_path = '/home/harrysocool/Github/fast-rcnn/DatabaseEars'
@@ -97,28 +122,35 @@ if __name__ == '__main__':
     #                   test_gt_output_path)
 
     matlab = initialize_matlab()
+    timer = Timer()
 
-    list1 = pd.read_csv(test_gt_output_path, header=None).values.flatten().tolist()
-    cmd = 'BING'
+    list1 = pd.read_csv(test_image_index_output_path, header=None).values.flatten().tolist()
+    cmd = 'ss'
+    # ks = [50 100 150 200 300];
+    par2_list = [2,3,4]
+    # par2_list = [3]
+    time_csv_out_path = os.path.join(os.path.dirname(datasets_path), 'result', cmd + '_' + 'OPtune_result_1.csv')
 
-    list2 = []
-    for index, image_path in enumerate(list1):
-        if index>300:
-            break
-        time, box_numer = time_analyse(matlab, cmd, image_path)
-        list2.append([time, box_numer])
-        print('{} has processed in {:.3f} seconds with {} boxes'.format(len(list2), time, box_numer))
+    # list2 = []
+    # for par2 in par2_list:
+    #     for par1 in [1]:
+    #         for index, image_path in enumerate(list1):
+    #             if index>300:
+    #                 break
+    #             time, box_numer, obj_proposals = time_analyse(matlab, cmd, image_path, par1, par2)
+    #             ratio = mean_IOU_ratio(index + 1, obj_proposals)
+    #             # list2.append([time, box_numer])
+    #             # print('{} has processed in {:.3f} seconds with {} boxes'.format(len(list2), time, box_numer))
+    #             print('No. {} has processed with par {} {}, box {} IOU ratio {:.3f} in {:.2f} seconds'.format(index,
+    #                                                                                                       par1, par2,box_numer ,ratio, time))
+    #             with open(time_csv_out_path, 'a') as csvfile:
+    #                 writer = csv.writer(csvfile)
+    #                 writer.writerow([par1, par2,ratio,box_numer, time])
 
-    time_csv_out_path = os.path.join(os.path.dirname(datasets_path), 'result',cmd+'_'+'time_result.csv')
-    write_list_to_csv(list2, time_csv_out_path)
+    # write_list_to_csv(list2, time_csv_out_path)
 
-    # # fnames_cell = "{" + ",".join("'{}'".format(x) for x in list1) + "}"
-    # fnames_cell = "{"
-    # for x in list1:
-    #     fnames_cell += "'" + x+ "',"
-    # fnames_cell += "}"
-    # # fnames_cell = "{'"+list1[0]+"','"+list1[1] +"'}"
-    # command = "res = {}({}, '{}')".format(cmd, fnames_cell, mat_output_filename)
-    # print(command)
+    fnames_cell = "{" + ",".join("'{}'".format(x) for x in list1) + "}"
+    command = "res = {}({}, '{}')".format('selective_search', fnames_cell, mat_output_filename)
+    print(command)
     #
     # matlab.eval(command)

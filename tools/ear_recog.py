@@ -71,13 +71,13 @@ def get_gt(image_index):
     return (x1, y1, x2, y2)
 
 
-def ROI_boxes(matlab, image_filepath, cmd):
+def ROI_boxes(matlab, image_filepath, cmd, par1,par2):
     if cmd == 'ed':
         # add the matlab directory path
         matlab.eval("cd('/home/harrysocool/Github/fast-rcnn/OP_methods/edges')")
         matlab.eval("addpath(genpath('/home/harrysocool/Github/fast-rcnn/OP_methods/edges'))")
         # matlab.eval("toolboxCompile")
-        matlab.eval("res = edge_detector_demo('{}','{}',{},{})".format(image_filepath, 'EAR0.4_2', 0.55, 0.75))
+        matlab.eval("res = edge_detector_demo('{}','{}',{},{})".format(image_filepath, 'EAR0.4_2', par1, par2))
         raw_boxes = matlab.get('res')
         boxes = np.asarray(raw_boxes)
     elif cmd == 'ss':
@@ -85,7 +85,8 @@ def ROI_boxes(matlab, image_filepath, cmd):
         matlab.eval("cd('/home/harrysocool/Github/fast-rcnn/OP_methods/selective_search_ijcv_with_python')")
         matlab.eval(
             "addpath(genpath('/home/harrysocool/Github/fast-rcnn/OP_methods/selective_search_ijcv_with_python'))")
-        matlab.eval("res = selective_search_demo('{}')".format(image_filepath))
+        # matlab.eval("res = selective_search_demo('{}')".format(image_filepath))
+        matlab.eval("res = selective_search_rcnn('{}', {}, {})".format(image_filepath, par1, par2))
         raw_boxes = matlab.get('res')
         boxes = np.asarray(raw_boxes)
     elif cmd == 'BING':
@@ -105,7 +106,7 @@ def transform_image(image_index, cmd, variable=None):
     if variable == 0:
         return image_filepath
     # craete the folder for transform iamge
-    datasets_path = '/home/harrysocool/Github/fast-rcnn/DatabaseEars/'
+    datasets_path = '/home/harrysocool/Github/fast-rcnn/DatabaseEars'
     file_name = os.path.basename(image_filepath)
     dir_path = os.path.join(datasets_path, cmd + '_' + str(variable))
     new_image_filepath = os.path.join(dir_path, file_name)
@@ -209,6 +210,7 @@ def visualise(image_index, image_filepath, dets, ratio):
                     (50, 50), font, 0.5, (0, 0, 255), 1)
         cv2.imshow('frame', im)
         cv2.waitKey(10)
+        cv2.imwrite('/home/harrysocool/Pictures/123/'+temp+'.png', im)
         return
     for bbox in dets:
         cv2.rectangle(im, (x1, y1), (x2, y2), (0, 255, 0), 2)
@@ -218,13 +220,14 @@ def visualise(image_index, image_filepath, dets, ratio):
                     (int(bbox[0]), int(bbox[1] - 10)), font, 0.5, (0, 0, 255), 1)
     cv2.imshow('frame', im)
     cv2.waitKey(10)
+    cv2.imwrite('/home/harrysocool/Pictures/123/'+temp+'.png', im)
 
 
 def result(object1, dets, image_index, image_filepath, method, time):
 
     ratio = IOU_ratio(image_index, dets)
 
-    # visualise(image_index, image_filepath, dets, ratio)
+    visualise(image_index, image_filepath, dets, ratio)
 
     object1.count += 1
     if (len(dets) == 0):
@@ -240,22 +243,26 @@ def result(object1, dets, image_index, image_filepath, method, time):
 def save_result(list1, image_filepath, cmd, transform, variable):
     dir_path = os.path.dirname(image_filepath)
     dir_path1 = os.path.dirname(dir_path)
-    csv_file_name = os.path.join(dir_path1,'result',
+    dir_path2 = os.path.dirname(dir_path1)
+    csv_file_name = os.path.join(dir_path2,'result',
                                  cmd + '_' + transform +'_'+str(variable)+'.csv')
     temp = pd.DataFrame(list1)
     temp.to_csv(csv_file_name, index=False, header=False)
 
+temp = 'noise_5'
 
 if __name__ == '__main__':
     # model_index (1 for caffemodel, 2 for svd_caffemodel_compressed)
     model_index = 1
-    OP_method = ('ed','ss', 'BING')
+    OP_method = ('ss','ed', 'BING')
     transform_prod = ('noise', 'occlude')
-    variable_prod = ((0,5,10,15,20,25,30),(0.1,0.2,0.3,0.4,0.5))
+    variable_prod = ((40,50),(0.1,0.2,0.3,0.4,0.5))
 
     cmd = OP_method[1]
-    transform = transform_prod[1]
-    variable = variable_prod[1][4]
+    transform = transform_prod[0]
+    variable = variable_prod[0][0]
+    global temp
+    temp = transform+'_'+str(variable)
 
     index_csv_path = os.path.join(cfg.ROOT_DIR,
                                   'ear_recognition', 'data_file', 'test_image_index_list.csv')
@@ -267,10 +274,11 @@ if __name__ == '__main__':
         image_list = csv.reader(mycsvfile)
         for index, item in enumerate(image_list):
             image_filepath = str(item[0])
-            # image_filepath = transform_image(index + 1, transform, variable)
+            image_filepath = transform_image(index + 1, transform, variable)
 
             dets, time = demo(net, matlab, image_filepath, ('ear',), cmd)
             result(object1, dets, index + 1, image_filepath, cmd, time)
+            break
 
     object1.gather()
     # save_result(object1.true_ratio, image_filepath, cmd, transform, variable)

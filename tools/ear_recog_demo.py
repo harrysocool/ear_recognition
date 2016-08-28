@@ -125,6 +125,8 @@ def demo(net, matlab, image_filepath, classes, args):
     timer.tic()
     # Load pre-computed Selected Search object proposals
     obj_proposals = ROI_boxes(matlab, image_filepath, args.OP_method)
+    if len(obj_proposals)==0:
+        return
 
     # Load the demo image
     im = cv2.imread(image_filepath)
@@ -252,3 +254,5 @@ if __name__ == '__main__':
         image_filepath = args.image_path
         demo(net, matlab, image_filepath, ('ear',), args)
         plt.show()
+        # fig = plt.figure()
+        # fig.savefig('/home/harrysocool/Pictures/result_1.png', dpi=fig.dpi)

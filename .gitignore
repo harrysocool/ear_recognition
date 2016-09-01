@@ -4,7 +4,7 @@
 .ipynb_checkpoints
 utils/*.c
 utils/*.so
-
+.DS_store
 #dataset
 /DatabaseEars
 /db_252_ears

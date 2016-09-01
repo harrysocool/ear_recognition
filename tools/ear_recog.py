@@ -91,7 +91,7 @@ def ROI_boxes(matlab, image_filepath, cmd, par1,par2):
         boxes = np.asarray(raw_boxes)
     elif cmd == 'BING':
         # BING method
-        boxes, _ = bing_demo(image_filepath)
+        boxes, _ = bing_demo(image_filepath, par1)
     else:
         raise NameError('Wrong ROI OP_methods name. (CHOOSE FROM: ss, ed, BING)')
 
@@ -135,12 +135,12 @@ def transform_image(image_index, cmd, variable=None):
     return new_image_filepath
 
 
-def demo(net, matlab, image_filepath, classes, method):
+def demo(net, matlab, image_filepath, classes, method, par1, par2):
     # Detect all object classes and regress object bounds
     timer = Timer()
     timer.tic()
     # Load pre-computed Selected Search object proposals
-    obj_proposals = ROI_boxes(matlab, image_filepath, method)
+    obj_proposals = ROI_boxes(matlab, image_filepath, method, par1, par2)
     global OP_num
     OP_num = len(obj_proposals)
     if len(obj_proposals)==0:
@@ -172,7 +172,7 @@ def demo(net, matlab, image_filepath, classes, method):
 
 def initialize(cmd, cm):
     if cmd == 'ss':
-        model_dirname = '20160809_SS_train0.8'
+        model_dirname = '20160828_SS_train0.8'
     elif cmd == 'ed':
         model_dirname = '20160808_EAR0.4.2_train0.8'
     elif cmd == 'BING':
@@ -244,8 +244,12 @@ def save_result(list1, image_filepath, cmd, transform, variable):
     dir_path = os.path.dirname(image_filepath)
     dir_path1 = os.path.dirname(dir_path)
     dir_path2 = os.path.dirname(dir_path1)
-    csv_file_name = os.path.join(dir_path2,'result',
+    if transform != 'None':
+        csv_file_name = os.path.join(dir_path2,'result',
                                  cmd + '_' + transform +'_'+str(variable)+'.csv')
+    elif transform == 'None':
+        csv_file_name = os.path.join(dir_path2, 'result',
+                                     cmd + '_tuned_6_7' + '.csv')
     temp = pd.DataFrame(list1)
     temp.to_csv(csv_file_name, index=False, header=False)
 
@@ -255,12 +259,14 @@ if __name__ == '__main__':
     # model_index (1 for caffemodel, 2 for svd_caffemodel_compressed)
     model_index = 1
     OP_method = ('ss','ed', 'BING')
-    transform_prod = ('noise', 'occlude')
+    transform_prod = ('None','noise', 'occlude')
     variable_prod = ((40,50),(0.1,0.2,0.3,0.4,0.5))
 
     cmd = OP_method[1]
     transform = transform_prod[0]
     variable = variable_prod[0][0]
+    par1 = 0.65
+    par2 = 0.75
     global temp
     temp = transform+'_'+str(variable)
 
@@ -274,11 +280,11 @@ if __name__ == '__main__':
         image_list = csv.reader(mycsvfile)
         for index, item in enumerate(image_list):
             image_filepath = str(item[0])
-            image_filepath = transform_image(index + 1, transform, variable)
+            # image_filepath = transform_image(index + 1, transform, variable)
 
-            dets, time = demo(net, matlab, image_filepath, ('ear',), cmd)
+            dets, time = demo(net, matlab, image_filepath, ('ear',), cmd, par1, par2)
             result(object1, dets, index + 1, image_filepath, cmd, time)
-            break
+            # break
 
     object1.gather()
     # save_result(object1.true_ratio, image_filepath, cmd, transform, variable)

@@ -7,4 +7,3 @@ OP_methods folder contains three "object proposal" methods
 The steps for training the caffemodel is in the tools/train_net.py
 
 tools/ear_recog.py is the main entry for testing iamges.
->>>>>>> 6e2e680ad3e4a83b4bf879d56711b4a669c9769f
